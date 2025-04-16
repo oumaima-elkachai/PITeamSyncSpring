@@ -14,6 +14,7 @@ import java.time.LocalTime;
 import java.util.Date;
 
 @Getter
+
 @Document(collection = "attendances")
 
 public class Presence {
@@ -37,9 +38,7 @@ public class Presence {
 
 
 
-    @Getter
     private double hoursWorked;
-    @Getter
     private double overtimeHours;
 
     public Presence() {}
@@ -72,32 +71,6 @@ public class Presence {
     }
 
     //Getters
-
-    public String getEmployeeId() {
-        return employeeId;
-    }
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public LocalTime getCheckInTime() {
-        return checkInTime;
-    }
-
-    public LocalTime getCheckOutTime() {
-        return checkOutTime;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public double getHoursWorked() {
-        return hoursWorked;
-    }
-    public double getOvertimeHours() {
-        return overtimeHours;
-    }
 
 
     // Constructeur avec paramètres

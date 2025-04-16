@@ -1,8 +1,6 @@
 package com.example.attendance.Backend.services.IMPL;
 
-import com.example.attendance.Backend.entity.Employee;
 import com.example.attendance.Backend.entity.Presence;
-import com.example.attendance.Backend.repository.EmployeeRepository;
 import com.example.attendance.Backend.repository.PresenceRepository;
 import com.example.attendance.Backend.services.interfaces.PresenceService;
 import org.slf4j.Logger;

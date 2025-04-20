@@ -17,8 +17,9 @@ public class ParticipantController {
     private IParticipantService participantService;
 
     @GetMapping
-    public List<Participant> getAllParticipants() {
-        return participantService.getAllParticipants();
+    public ResponseEntity<List<Participant>> getAllParticipants() {
+        List<Participant> participants = participantService.getAllParticipants();
+        return ResponseEntity.ok(participants);
     }
 
     @PostMapping("/add")

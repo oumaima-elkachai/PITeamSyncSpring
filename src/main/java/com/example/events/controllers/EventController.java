@@ -23,11 +23,9 @@ public class EventController {
     private MongoTemplate mongoTemplate;
 
     @GetMapping
-    public ResponseEntity<?> getAllEvents() {
+    public ResponseEntity<List<Event>> getAllEvents() {
         List<Event> events = eventService.getAllEvents();
-        return ResponseEntity.ok()
-                .header("Content-Type", "application/json")
-                .body(Map.of("status", "success", "data", events));
+        return ResponseEntity.ok(events);
     }
 
     @PostMapping("/add")

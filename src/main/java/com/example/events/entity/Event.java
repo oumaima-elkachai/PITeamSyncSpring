@@ -47,6 +47,8 @@ public class Event {
     @ToString.Exclude
     private List<String> participantId;
 
+    private Integer capacity; // Maximum number of participants allowed
+
     //  private List<Participant> participants;
 
     // Date/time convenience methods
@@ -163,5 +165,13 @@ public class Event {
 
     public void setParticipantId(List<String> participantId) {
         this.participantId = participantId;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
     }
 }

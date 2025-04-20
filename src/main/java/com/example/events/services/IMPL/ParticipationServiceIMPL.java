@@ -7,6 +7,7 @@ import com.example.events.repository.ParticipationRepository;
 import com.example.events.repository.eventRepository;
 import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
+import com.example.events.services.interfaces.INotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,14 +20,17 @@ public class ParticipationServiceIMPL implements IParticipationService {
     private final ParticipationRepository participationRepository;
     private final eventRepository eventRepository;
     private final AuditLogRepository auditLogRepository;
+    private final INotificationService notificationService;
 
     @Autowired
     public ParticipationServiceIMPL(ParticipationRepository participationRepository, 
                                    eventRepository eventRepository,
-                                   AuditLogRepository auditLogRepository) {
+                                   AuditLogRepository auditLogRepository,
+                                   INotificationService notificationService) {
         this.participationRepository = participationRepository;
         this.eventRepository = eventRepository;
         this.auditLogRepository = auditLogRepository;
+        this.notificationService = notificationService;
     }
 
     private void createAuditLog(String action, Participation participation, String details) {
@@ -69,6 +73,14 @@ public class ParticipationServiceIMPL implements IParticipationService {
         // Create audit log for new participation
         createAuditLog("ADD", savedParticipation, 
             String.format("Added participant to event with status: %s", participation.getStatus()));
+        
+        // Send notification
+        notificationService.notifyParticipant(
+            participation.getParticipantId(),
+            String.format("You have been %s to event %s", 
+                participation.getStatus().equals("WAITLISTED") ? "waitlisted" : "added",
+                participation.getEventId())
+        );
         
         return savedParticipation;
     }
@@ -116,6 +128,12 @@ public class ParticipationServiceIMPL implements IParticipationService {
             
         // Create audit log before deletion
         createAuditLog("REMOVE", participation, "Removed participant from event");
+        
+        // Send notification before deletion
+        notificationService.notifyParticipant(
+            participation.getParticipantId(),
+            "You have been removed from event " + participation.getEventId()
+        );
         
         participationRepository.deleteById(id);
     }

@@ -57,6 +57,11 @@ public class ParticipationController {
         return ResponseEntity.ok(participations);
     }
 
+    @GetMapping("/audit-logs")
+    public ResponseEntity<List<AuditLog>> getAllAuditLogs() {
+        return ResponseEntity.ok(auditLogService.getAllAuditLogs());
+    }
+
     @GetMapping("/{id}/audit-logs")
     public ResponseEntity<List<AuditLog>> getParticipationAuditLogs(@PathVariable String id) {
         return ResponseEntity.ok(auditLogService.getAuditLogsByParticipationId(id));
@@ -65,5 +70,10 @@ public class ParticipationController {
     @GetMapping("/event/{eventId}/audit-logs")
     public ResponseEntity<List<AuditLog>> getEventAuditLogs(@PathVariable String eventId) {
         return ResponseEntity.ok(auditLogService.getAuditLogsByEventId(eventId));
+    }
+
+    @GetMapping("/participant/{participantId}/audit-logs")
+    public ResponseEntity<List<AuditLog>> getParticipantAuditLogs(@PathVariable String participantId) {
+        return ResponseEntity.ok(auditLogService.getAuditLogsByParticipantId(participantId));
     }
 }

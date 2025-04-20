@@ -2,12 +2,15 @@ package com.example.events.services.IMPL;
 
 import com.example.events.entity.Participation;
 import com.example.events.entity.Event;
+import com.example.events.entity.AuditLog;
 import com.example.events.repository.ParticipationRepository;
 import com.example.events.repository.eventRepository;
+import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -15,11 +18,28 @@ public class ParticipationServiceIMPL implements IParticipationService {
 
     private final ParticipationRepository participationRepository;
     private final eventRepository eventRepository;
+    private final AuditLogRepository auditLogRepository;
 
     @Autowired
-    public ParticipationServiceIMPL(ParticipationRepository participationRepository, eventRepository eventRepository) {
+    public ParticipationServiceIMPL(ParticipationRepository participationRepository, 
+                                   eventRepository eventRepository,
+                                   AuditLogRepository auditLogRepository) {
         this.participationRepository = participationRepository;
         this.eventRepository = eventRepository;
+        this.auditLogRepository = auditLogRepository;
+    }
+
+    private void createAuditLog(String action, Participation participation, String details) {
+        AuditLog auditLog = new AuditLog();
+        auditLog.setAction(action);
+        auditLog.setParticipationId(participation.getId());
+        auditLog.setEventId(participation.getEventId());
+        auditLog.setParticipantId(participation.getParticipantId());
+        auditLog.setPerformedBy("system"); // TODO: Replace with actual user when authentication is implemented
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setDetails(details);
+        
+        auditLogRepository.save(auditLog);
     }
 
     @Override
@@ -44,7 +64,13 @@ public class ParticipationServiceIMPL implements IParticipationService {
             participation.setStatus("PENDING");
         }
 
-        return participationRepository.save(participation);
+        Participation savedParticipation = participationRepository.save(participation);
+        
+        // Create audit log for new participation
+        createAuditLog("ADD", savedParticipation, 
+            String.format("Added participant to event with status: %s", participation.getStatus()));
+        
+        return savedParticipation;
     }
 
     @Override
@@ -57,9 +83,16 @@ public class ParticipationServiceIMPL implements IParticipationService {
             throw new IllegalArgumentException("Invalid status: " + newStatus);
         }
 
-        // Update the status
+        String oldStatus = participation.getStatus();
         participation.setStatus(newStatus);
-        return participationRepository.save(participation);
+        
+        Participation updatedParticipation = participationRepository.save(participation);
+        
+        // Create audit log for status update
+        createAuditLog("UPDATE", updatedParticipation, 
+            String.format("Status changed from %s to %s", oldStatus, newStatus));
+        
+        return updatedParticipation;
     }
 
     private boolean isValidStatus(String status) {
@@ -78,6 +111,12 @@ public class ParticipationServiceIMPL implements IParticipationService {
 
     @Override
     public void deleteParticipation(String id) {
+        Participation participation = participationRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Participation not found"));
+            
+        // Create audit log before deletion
+        createAuditLog("REMOVE", participation, "Removed participant from event");
+        
         participationRepository.deleteById(id);
     }
 

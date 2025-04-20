@@ -2,7 +2,10 @@
 package com.example.events.controllers;
 
 import com.example.events.entity.Participation;
+import com.example.events.entity.AuditLog;
+import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
+import com.example.events.services.interfaces.IAuditLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +18,12 @@ public class ParticipationController {
 
     @Autowired
     private IParticipationService participationService;
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private IAuditLogService auditLogService;
 
     @PostMapping
     public ResponseEntity<Participation> addParticipation(@RequestBody Participation participation) {
@@ -46,5 +55,15 @@ public class ParticipationController {
     public ResponseEntity<List<Participation>> getAllParticipations() {
         List<Participation> participations = participationService.getAllParticipations();
         return ResponseEntity.ok(participations);
+    }
+
+    @GetMapping("/{id}/audit-logs")
+    public ResponseEntity<List<AuditLog>> getParticipationAuditLogs(@PathVariable String id) {
+        return ResponseEntity.ok(auditLogService.getAuditLogsByParticipationId(id));
+    }
+
+    @GetMapping("/event/{eventId}/audit-logs")
+    public ResponseEntity<List<AuditLog>> getEventAuditLogs(@PathVariable String eventId) {
+        return ResponseEntity.ok(auditLogService.getAuditLogsByEventId(eventId));
     }
 }

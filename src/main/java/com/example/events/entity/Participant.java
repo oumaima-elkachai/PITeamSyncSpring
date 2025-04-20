@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,6 +31,11 @@ public class Participant {
 
     private List<String> certificationIds;
 
+    @DBRef(lazy = true)
+    private List<Feedback> givenFeedbacks;
+
+    @DBRef(lazy = true)
+    private List<Reclamation> submittedReclamations;
 
     public List<Event> getEvents() {
         return events;

@@ -47,6 +47,12 @@ public class Event {
     @ToString.Exclude
     private List<String> participantId;
 
+    @DBRef(lazy = true)
+    private List<Feedback> feedbacks;
+
+    @DBRef(lazy = true)
+    private List<Reclamation> reclamations;
+
     private Integer capacity; // Maximum number of participants allowed
 
     //  private List<Participant> participants;

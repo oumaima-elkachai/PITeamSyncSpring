@@ -3,11 +3,13 @@ package com.example.payroll.controllers;
 import com.example.payroll.model.Payment;
 import com.example.payroll.services.interfaces.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -51,6 +53,25 @@ public class PaymentController {
                                                 @RequestParam("endDate") Date endDate) {
         return paymentService.getPaymentsByDateRange(startDate, endDate);
     }
+
+    @PostMapping("/predict-status")
+    public ResponseEntity<String> predictPaymentStatus(@RequestBody Map<String, Object> data) {
+        String flaskUrl = "http://localhost:5000/predict";
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(data, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(flaskUrl, request, String.class);
+
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la prédiction : " + e.getMessage());
+        }
+    }
+
 
 
 

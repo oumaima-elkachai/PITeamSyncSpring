@@ -24,11 +24,11 @@ public class ParticipationServiceIMPL implements IParticipationService {
 
     @Override
     public Participation addParticipation(Participation participation) {
-        // Check if event exists and get its capacity
-        Event event = eventRepository.findById(participation.getEventId())
-                .orElseThrow(() -> new IllegalArgumentException("Event not found with id: " + participation.getEventId()));
+        // Check if event exists using idEvent
+        Event event = eventRepository.findByIdEvent(participation.getEventId())
+                .orElseThrow(() -> new IllegalArgumentException("Event not found with idEvent: " + participation.getEventId()));
 
-        // Get current number of active participants (not cancelled)
+        // Get current number of active participants
         long currentParticipants = participationRepository.findByEventId(participation.getEventId())
                 .stream()
                 .filter(p -> !p.getStatus().equals("CANCELLED"))
@@ -38,7 +38,7 @@ public class ParticipationServiceIMPL implements IParticipationService {
         participation.setParticipationDate(java.time.LocalDateTime.now());
 
         // Check if event is at capacity
-        if (currentParticipants >= event.getCapacity()) {
+        if (event.getCapacity() != null && currentParticipants >= event.getCapacity()) {
             participation.setStatus("WAITLISTED");
         } else {
             participation.setStatus("PENDING");

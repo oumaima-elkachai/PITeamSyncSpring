@@ -14,12 +14,8 @@ import java.util.List;
 @Service
 public class EventServiceIMPL implements IEventService {
 
-    private final eventRepository eventRepository;
-
     @Autowired
-    public EventServiceIMPL(eventRepository eventRepository) {
-        this.eventRepository = eventRepository;
-    }
+    private eventRepository eventRepository;
 
     @Override
     public Page<Event> getAllEventsPaginated(int page, int size) {
@@ -39,7 +35,7 @@ public class EventServiceIMPL implements IEventService {
 
     @Override
     public Event getEventById(String id) {
-        return eventRepository.findById(id)
+        return eventRepository.findByIdEvent(id)
                 .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
     }
 
@@ -113,7 +109,5 @@ public class EventServiceIMPL implements IEventService {
     public List<Event> getEventsByDate(LocalDate date) {
         return eventRepository.findByStartDate(date);
     }
-
-
 
 }

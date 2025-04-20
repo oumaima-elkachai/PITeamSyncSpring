@@ -16,4 +16,6 @@ public interface eventRepository extends MongoRepository<Event, String> {
 
     @Query(value = "{ 'id': ?0 }")
     Optional<Event> findById(String id);
+
+    Optional<Event> findByIdEvent(String idEvent);
 }

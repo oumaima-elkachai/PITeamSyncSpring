@@ -1,11 +1,16 @@
 package tn.esprit.spring.teamsync.Controller;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.spring.teamsync.Entity.Task;
 import tn.esprit.spring.teamsync.Services.Interfaces.TaskService;
+import tn.esprit.spring.teamsync.Services.MPL.ResourceNotFoundException;
+
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -18,11 +23,41 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+
+    // TaskController.java
+    @PostMapping("/{taskId}/links")
+    public ResponseEntity<Task> addLink(
+            @PathVariable String taskId,
+            @RequestBody Map<String, String> linkRequest
+    ) {
+        Task updatedTask = taskService.addLink(taskId, linkRequest);
+        return ResponseEntity.ok(updatedTask);
+    }
+
+    @DeleteMapping("/{taskId}/links/{linkIndex}")
+    public ResponseEntity<Task> removeLink(
+            @PathVariable String taskId,
+            @PathVariable int linkIndex
+    ) {
+        Task updatedTask = taskService.removeLink(taskId, linkIndex);
+        return ResponseEntity.ok(updatedTask);
+    }
+
+
     // Create
     @PostMapping
     public ResponseEntity<Task> createTask(@RequestBody Task task) {
         Task savedTask = taskService.createTask(task);
         return new ResponseEntity<>(savedTask, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/{id}/request-extension")
+    public ResponseEntity<Task> requestExtension(
+            @PathVariable String id,
+            @RequestParam("newDeadline") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate newDeadline
+    ) {
+        Task updatedTask = taskService.requestExtension(id, newDeadline);
+        return ResponseEntity.ok(updatedTask);
     }
 
     // Read All
@@ -73,5 +108,28 @@ public class TaskController {
             return ResponseEntity.internalServerError()
                     .body("Failed to retrieve tasks: " + e.getMessage());
         }
+    }
+
+    // TaskController.java
+    @PatchMapping("/{id}/approve-extension")
+    public ResponseEntity<Task> approveExtension(@PathVariable String id) {
+        Task task = taskService.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+
+        if ("PENDING".equals(task.getExtensionStatus())) { // Use string comparison
+            task.setDeadline(task.getRequestedExtensionDate());
+            task.setExtensionStatus("APPROVED"); // Direct string assignment
+        }
+
+        return ResponseEntity.ok(taskService.save(task));
+    }
+
+    @PatchMapping("/{id}/reject-extension")
+    public ResponseEntity<Task> rejectExtension(@PathVariable String id) {
+        Task task = taskService.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+
+        task.setExtensionStatus("REJECTED"); // Direct string assignment
+        return ResponseEntity.ok(taskService.save(task));
     }
 }

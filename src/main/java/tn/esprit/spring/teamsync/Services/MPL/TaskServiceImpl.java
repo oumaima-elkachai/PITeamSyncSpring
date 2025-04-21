@@ -11,7 +11,12 @@ import tn.esprit.spring.teamsync.Repository.TaskRepository;
 import tn.esprit.spring.teamsync.Repository.ProjectRepository;
 
 import tn.esprit.spring.teamsync.Services.Interfaces.TaskService;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +26,41 @@ public class TaskServiceImpl implements TaskService {
     private final ProjectRepository projectRepository; // Added
     private final EmployeeRepository employeeRepository; // Added
 
+
+    @Override
+    public Task save(Task task) {
+        return taskRepository.save(task);
+    }
+
+    @Override
+    public Task addLink(String taskId, Map<String, String> link) {
+        link.put("createdAt", LocalDateTime.now().toString());
+        return taskRepository.findById(taskId)
+                .map(task -> {
+                    task.getLinks().add(link);
+                    return taskRepository.save(task);
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+    }
+
+    @Override
+    public Task removeLink(String taskId, int linkIndex) {
+        return taskRepository.findById(taskId)
+                .map(task -> {
+                    if (linkIndex >= 0 && linkIndex < task.getLinks().size()) {
+                        task.getLinks().remove(linkIndex);
+                        return taskRepository.save(task);
+                    }
+                    throw new IllegalArgumentException("Invalid link index");
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+    }
+
+
+    @Override
+    public Optional<Task> findById(String id) {
+        return taskRepository.findById(id);
+    }
 
     @Override
     public Task createTask(Task task) {
@@ -85,7 +125,15 @@ public class TaskServiceImpl implements TaskService {
         return taskRepository.findAll();
     }
 
+    @Override
+    public Task requestExtension(String taskId, LocalDate newDeadline) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
+        task.setRequestedExtensionDate(newDeadline);
+        task.setExtensionStatus("PENDING"); // Assign as string
+        return taskRepository.save(task);
+    }
 
 
 }

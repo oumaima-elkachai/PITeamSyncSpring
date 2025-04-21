@@ -22,6 +22,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final ProjectRepository projectRepository;
 
     @Override
+    public List<Employee> getEmployeesByProject(String projectId) {
+        return employeeRepository.findByProjectIdsContaining(projectId);
+    }
+    @Override
     public Employee createEmployee(Employee employee) {
         if (employee.getAssignedTaskIds() == null) {
             employee.setAssignedTaskIds(new ArrayList<>());

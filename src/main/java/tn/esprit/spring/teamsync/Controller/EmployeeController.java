@@ -37,6 +37,14 @@ public class EmployeeController {
         }
     }
 
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<Employee>> getEmployeesByProject(@PathVariable String projectId) {
+        List<Employee> employees = employeeService.getEmployeesByProject(projectId);
+        return new ResponseEntity<>(employees, HttpStatus.OK);
+    }
+
+
+
     // Create a new employee
     @PostMapping
     public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {

@@ -3,7 +3,12 @@ package tn.esprit.spring.teamsync.Entity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
- import java.time.LocalDate;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -23,9 +28,19 @@ public class Task {
     private Priority priority;
     private Status status;
 
+    @Field
+    private LocalDate requestedExtensionDate;
+
+    @Field
+    private String extensionStatus; // PENDING, APPROVED, REJECTED
+
+
     // Relationships
     private String employeeId; // Optional: assigned employee
 
     public enum Priority { HIGH, MEDIUM, LOW }
     public enum Status { TODO, IN_PROGRESS, DONE }
+
+    @Field
+    private List<Map<String, String>> links = new ArrayList<>();
 }

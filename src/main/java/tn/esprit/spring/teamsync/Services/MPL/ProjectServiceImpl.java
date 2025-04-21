@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import tn.esprit.spring.teamsync.Entity.Project;
 import tn.esprit.spring.teamsync.Repository.ProjectRepository;
 import tn.esprit.spring.teamsync.Services.Interfaces.ProjectService;
-
 import java.util.List;
 
 @Service
@@ -20,18 +19,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Project updateProject(String id, Project updatedProject) {
-        Project project = projectRepository.findById(id).orElse(null);
-        if (project == null) return null;
-
-        updatedProject.setId(id);
-        return projectRepository.save(updatedProject);
+    public Project updateProject(String id, Project project) {
+        project.setId(id); // Ensure the ID matches
+        return projectRepository.save(project);
     }
 
     @Override
-    public boolean deleteProject(String id) {
+    public void deleteProject(String id) {
         projectRepository.deleteById(id);
-        return false;
     }
 
     @Override

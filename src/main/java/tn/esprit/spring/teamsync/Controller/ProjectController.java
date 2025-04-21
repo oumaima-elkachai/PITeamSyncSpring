@@ -1,65 +1,61 @@
 package tn.esprit.spring.teamsync.Controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.spring.teamsync.Entity.Project;
 import tn.esprit.spring.teamsync.Services.Interfaces.ProjectService;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/projects")
+@CrossOrigin(origins = "http://localhost:4200")
 public class ProjectController {
 
-    @Autowired
-    private ProjectService projectService;
+    private final ProjectService projectService;
 
-    // Get all projects
-    @GetMapping
-    public ResponseEntity<List<Project>> getAllProjects() {
-        List<Project> projects = projectService.getAllProjects();
-        return new ResponseEntity<>(projects, HttpStatus.OK);
+    public ProjectController(ProjectService projectService) {
+        this.projectService = projectService;
     }
 
-    // Get a project by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Project> getProjectById(@PathVariable String id) {
-        Project project = projectService.getProjectById(id);
-        if (project != null) {
-            return new ResponseEntity<>(project, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    // Create a new project
+    // Create
     @PostMapping
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
         Project savedProject = projectService.createProject(project);
         return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
     }
 
-    // Update an existing project
-    @PutMapping("/{id}")
-    public ResponseEntity<Project> updateProject(@PathVariable String id, @RequestBody Project project) {
-        Project updatedProject = projectService.updateProject(id, project);
-        if (updatedProject != null) {
-            return new ResponseEntity<>(updatedProject, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    // Read All
+    @GetMapping
+    public ResponseEntity<List<Project>> getAllProjects() {
+        return ResponseEntity.ok(projectService.getAllProjects());
     }
 
-    // Delete a project by ID
+    // Read One
+    @GetMapping("/{id}")
+    public ResponseEntity<Project> getProjectById(@PathVariable String id) {
+        Project project = projectService.getProjectById(id);
+        return project != null
+                ? ResponseEntity.ok(project)
+                : ResponseEntity.notFound().build();
+    }
+
+    // Update
+    @PutMapping("/{id}")
+    public ResponseEntity<Project> updateProject(
+            @PathVariable String id,
+            @RequestBody Project project
+    ) {
+        Project updatedProject = projectService.updateProject(id, project);
+        return updatedProject != null
+                ? ResponseEntity.ok(updatedProject)
+                : ResponseEntity.notFound().build();
+    }
+
+    // Delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable String id) {
-        boolean isDeleted = projectService.deleteProject(id);
-        if (isDeleted) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        projectService.deleteProject(id);
+        return ResponseEntity.noContent().build();
     }
 }

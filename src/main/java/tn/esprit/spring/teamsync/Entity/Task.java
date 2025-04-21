@@ -3,23 +3,29 @@ package tn.esprit.spring.teamsync.Entity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.util.List;
+ import java.time.LocalDate;
 
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Document(collection = "tasks")
 public class Task {
     @Id
-    private String id;            // Lombok will generate setId(String id)
-    private String employeeId;
-    private String projectId;
+    private String id;
+
+    private String projectId; // MUST be linked to a project
+
     private String title;
     private String description;
-    private String deadline;      // ISO string format (e.g., "2024-03-15T14:30:00Z")
-    private String priority;      // Could be an enum (e.g., "HIGH", "MEDIUM", "LOW")
-    private String status;        // e.g., "TODO", "IN_PROGRESS", "DONE"
-    private String attachment;    // File path or URL
+    private LocalDate deadline;
+    private Priority priority;
+    private Status status;
+
+    // Relationships
+    private String employeeId; // Optional: assigned employee
+
+    public enum Priority { HIGH, MEDIUM, LOW }
+    public enum Status { TODO, IN_PROGRESS, DONE }
 }

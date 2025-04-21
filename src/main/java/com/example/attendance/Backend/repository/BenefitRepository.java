@@ -11,7 +11,10 @@ import java.util.List;
 public interface BenefitRepository extends MongoRepository<Benefit, String> {
     List<Benefit> findByEmployeeId(String employeeId);
 
+
     boolean existsByEmployeeIdAndType(String employeeId, String type);
+
+    boolean existsByEmployeeIdAndTypeAndMonthCreated(String employeeId, String type, int monthCreated);
 
 
 }

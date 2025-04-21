@@ -30,11 +30,7 @@ public class BenefitController {
         return benefitRepository.findByEmployeeId(id);
     }
 
-    @PostMapping("/generate")
-    public ResponseEntity<?> generateBenefits() {
-        benefitService.generateMonthlyBenefits();
-        return ResponseEntity.ok("Benefits generated.");
-    }
+
     @PostMapping("/generate-monthly")
     public ResponseEntity<String> generateMonthlyBenefits() {
         benefitService.generateMonthlyBenefits();

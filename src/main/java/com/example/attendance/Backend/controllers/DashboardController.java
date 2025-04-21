@@ -1,11 +1,16 @@
 package com.example.attendance.Backend.controllers;
 
+import com.example.attendance.Backend.dto.EmployeeDashboardDTO;
 import com.example.attendance.Backend.dto.EmployeeStatsDTO;
 import com.example.attendance.Backend.entity.Employee;
 import com.example.attendance.Backend.entity.Presence;
+import com.example.attendance.Backend.entity.Request;
+import com.example.attendance.Backend.entity.RequestStatus;
 import com.example.attendance.Backend.repository.EmployeeRepository;
 import com.example.attendance.Backend.repository.PresenceRepository;
+import com.example.attendance.Backend.repository.RequestRepository;
 import com.example.attendance.Backend.services.interfaces.DashboardService;
+import com.example.attendance.Backend.services.interfaces.GamificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,16 +19,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
+
 public class DashboardController {
 
     private final EmployeeRepository employeeRepository;
     private final PresenceRepository presenceRepository;
+    private final RequestRepository requestRepository;
+    private final GamificationService gamificationService;
+
 
     @GetMapping("/stats")
     public List<Map<String, Object>> getPresenceStats() {
@@ -82,4 +93,43 @@ public class DashboardController {
 
         return currentWeek - dateWeek;
     }
+
+
+    @GetMapping("/employees-with-badges")
+    public List<EmployeeDashboardDTO> getEmployeesWithStats() {
+        List<EmployeeDashboardDTO> result = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        LocalDate startOfMonth = now.withDayOfMonth(1);
+        LocalDate endOfMonth = now.withDayOfMonth(now.lengthOfMonth());
+
+        for (Employee emp : employeeRepository.findAll()) {
+            int totalDays = presenceRepository.findByEmployeeIdAndDateBetween(emp.getId(), startOfMonth, endOfMonth).size();
+            int percentage = Math.min(100, (int) (Math.random() * 100)); // à améliorer
+
+            // Leave balance
+            List<Request> approved = requestRepository.findByEmployeeIdAndStatus(emp.getId(), RequestStatus.APPROVED);
+            Map<String, Integer> balances = new HashMap<>();
+            for (Request r : approved) {
+                int days = (int) ChronoUnit.DAYS.between(r.getStartDate(), r.getEndDate()) + 1;
+                balances.merge(r.getType(), days, Integer::sum);
+            }
+
+            result.add(new EmployeeDashboardDTO(
+                    emp.getId(),
+                    emp.getName(),
+                    emp.getEmail(),
+                    emp.getRole(),
+                    emp.getDepartment(),
+                    emp.getPhone() != null ? emp.getPhone() : "+216 12 345 678",
+                    totalDays,
+                    percentage,
+                    gamificationService.getBadgesForEmployee(emp.getId()),
+                    balances
+            ));
+        }
+
+        return result;
+    }
+
+
 }

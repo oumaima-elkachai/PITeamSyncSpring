@@ -26,6 +26,7 @@ public class Employee {
     private String email;
     private String department;
     private String role;
+    private String phone;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date hireDate;

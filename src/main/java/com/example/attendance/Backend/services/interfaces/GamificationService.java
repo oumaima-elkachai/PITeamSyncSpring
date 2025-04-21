@@ -5,8 +5,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public interface BadgeService {
+public interface GamificationService {
     List<String> getBadgesForEmployee(String employeeId);
 
+    String getTopPerformerEmployeeId();
 
 }

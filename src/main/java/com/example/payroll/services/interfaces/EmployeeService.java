@@ -10,6 +10,7 @@ public interface EmployeeService {
     Optional<Employee> getEmployeeById(String id);
     Employee saveEmployee(Employee employee);
     void deleteEmployee(String id);
+    String getEmployeeNameById(String id);
 
 }
 

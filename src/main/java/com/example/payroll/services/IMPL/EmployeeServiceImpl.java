@@ -39,6 +39,11 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.deleteById(id);
     }
 
-    // Méthode ajoutée pour associer un Payroll à un Employee
+    @Override
+    public String getEmployeeNameById(String id) {
+        return employeeRepository.findById(id)
+                .map(Employee::getName)
+                .orElse("Employé inconnu");
+    }
 
 }

@@ -28,6 +28,8 @@ public class Task {
     private Priority priority;
     private Status status;
 
+    private List<String> requiredSkills = new ArrayList<>();
+
     @Field
     private LocalDate requestedExtensionDate;
 

@@ -43,6 +43,14 @@ public class EmployeeController {
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
 
+    @GetMapping("/{employeeId}/upcoming-deadlines")
+    public ResponseEntity<List<Task>> getUpcomingDeadlines(
+            @PathVariable String employeeId,
+            @RequestParam(defaultValue = "7") int daysAhead
+    ) {
+        List<Task> tasks = employeeService.getUpcomingDeadlines(employeeId, daysAhead);
+        return ResponseEntity.ok(tasks);
+    }
 
 
     // Create a new employee

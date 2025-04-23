@@ -9,6 +9,8 @@ import tn.esprit.spring.teamsync.Repository.EmployeeRepository;
 import tn.esprit.spring.teamsync.Repository.ProjectRepository;
 import tn.esprit.spring.teamsync.Repository.TaskRepository;
 import tn.esprit.spring.teamsync.Services.Interfaces.EmployeeService;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
 
+    @Override
+    public List<Task> getUpcomingDeadlines(String employeeId, int daysAhead) {
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(daysAhead);
+
+        return taskRepository.findByEmployeeIdAndDeadlineBetweenAndStatusNot(
+                employeeId,
+                start,
+                end,
+                Task.Status.DONE
+        );
+    }
     @Override
     public List<Employee> getEmployeesByProject(String projectId) {
         return employeeRepository.findByProjectIdsContaining(projectId);

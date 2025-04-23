@@ -10,6 +10,7 @@ public interface EmployeeService {
     List<Employee> getEmployeesByProject(String projectId);
     Employee updateEmployee(String id, Employee employee);
     boolean deleteEmployee(String id);
+    List<Task> getUpcomingDeadlines(String employeeId, int daysAhead);
     Employee getEmployeeById(String id);
     List<Employee> getAllEmployees();
     List<Task> getEmployeeAssignedTasks(String employeeId);

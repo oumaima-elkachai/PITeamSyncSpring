@@ -1,13 +1,16 @@
 package com.example.payroll.controllers;
 
 import com.example.payroll.model.Payment;
+import com.example.payroll.repository.PaymentRepository;
 import com.example.payroll.services.interfaces.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +21,7 @@ public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;
+    private PaymentRepository paymentRepository;
     @PostMapping
     public Payment createPayment(@RequestBody Payment payment) {
         return paymentService.createPayment(payment);
@@ -70,6 +74,19 @@ public class PaymentController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la prédiction : " + e.getMessage());
         }
+    }
+
+    @GetMapping("/payments/monthly")
+    public Map<String, Double> getPaymentsGroupedByMonth() {
+        List<Payment> payments = paymentRepository.findAll();
+        Map<String, Double> paymentsByMonth = new HashMap<>();
+
+        for (Payment payment : payments) {
+            String month = new SimpleDateFormat("MMMM").format(payment.getPaymentDate());
+            paymentsByMonth.put(month, paymentsByMonth.getOrDefault(month, 0.0) + payment.getAmount());
+        }
+
+        return paymentsByMonth;
     }
 
 

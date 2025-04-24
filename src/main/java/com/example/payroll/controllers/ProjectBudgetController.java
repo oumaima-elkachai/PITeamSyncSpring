@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -55,4 +57,29 @@ public class ProjectBudgetController {
         projectBudgetService.deleteProjectBudget(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/analytics")
+    public ResponseEntity<?> getBudgetAnalytics() {
+        List<ProjectBudget> budgets = projectBudgetService.getAllProjectBudgets();
+
+        List<Map<String, Object>> analytics = budgets.stream().map(budget -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("projetName", budget.getProjet().getName());
+            data.put("allocatedFunds", budget.getAllocatedFunds());
+            data.put("usedFunds", budget.getUsedFunds());
+
+            double ratio = budget.getUsedFunds() / budget.getAllocatedFunds();
+            data.put("efficiency", ratio); // 0.0 à 1.0
+
+            String score;
+            if (ratio < 0.5) score = "Low usage";
+            else if (ratio < 1.0) score = "Good";
+            else score = "Over budget";
+
+            data.put("score", score);
+            return data;
+        }).toList();
+
+        return ResponseEntity.ok(analytics);
+    }
+
 }

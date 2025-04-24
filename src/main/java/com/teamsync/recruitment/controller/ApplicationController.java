@@ -8,9 +8,13 @@ import com.teamsync.recruitment.exception.JobNotFoundException;
 import com.teamsync.recruitment.repository.JobPostingRepository;
 import com.teamsync.recruitment.repository.ApplicationRepository;
 import com.teamsync.recruitment.entity.JobPosting;
-
 import com.teamsync.recruitment.service.CloudinaryService;
 import com.teamsync.recruitment.service.EmailService;
+
+import com.teamsync.recruitment.service.TwilioService;
+
+
+
 import com.teamsync.recruitment.service.FileStorageService;
 import com.teamsync.recruitment.service.interfaces.ApplicationService;
 import com.teamsync.recruitment.service.interfaces.JobPostingService;
@@ -18,13 +22,12 @@ import com.teamsync.recruitment.service.interfaces.NotificationService;
 import io.github.classgraph.Resource;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
+import org.apache.http.HttpEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -34,34 +37,26 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/applications")
 @AllArgsConstructor
 public class ApplicationController {
 
-
     private final ApplicationService applicationService;
-
-
-    private final FileStorageService fileStorageService; //  Injection du service
-
-
+    private final FileStorageService fileStorageService;
     private final JobPostingRepository jobPostingRepository;
-
-
     private final ApplicationRepository applicationRepository;
-
-
     private final JobPostingService jobPostingService;
-
     private final EmailService emailService;
-
     private final NotificationService notificationService;
-
     private final CloudinaryService cloudinaryService;
+    private final TwilioService twilioService;
 
 
+    @Autowired
+    private RestTemplate restTemplate;
 
     @GetMapping
     public ResponseEntity<List<Application>> getAllApplications() {
@@ -70,23 +65,58 @@ public class ApplicationController {
 
     @PostMapping
     public ResponseEntity<Application> createApplication(@RequestBody Application application, String jobId) {
-
-        boolean alreadyApplied = applicationRepository
-                .existsByJobIdAndCandidateId(application.getJobId(), application.getCandidateId());
+        boolean alreadyApplied = applicationRepository.existsByJobIdAndCandidateId(application.getJobId(), application.getCandidateId());
 
         if (alreadyApplied) {
             throw new RuntimeException("Vous avez déjà postulé à ce job.");
         }
 
-
-        return ResponseEntity.ok(applicationService.createApplication(application,jobId));
+        return ResponseEntity.ok(applicationService.createApplication(application, jobId));
     }
 
-    @PutMapping("/{id}/status")
+   /* @PutMapping("/{id}/status")
     public ResponseEntity<Application> updateApplicationStatus(@PathVariable String id, @RequestParam String status) {
         applicationService.updateApplicationStatus(id, status);
         return ResponseEntity.ok(applicationService.getApplicationById(id));
+    }*/
+    /// ///////////////////////
+    @PutMapping("/{id}/status")
+public ResponseEntity<Application> updateApplicationStatus(@PathVariable String id, @RequestParam String status) {
+    // Mise à jour du statut dans le service
+    applicationService.updateApplicationStatus(id, status);
+    Application updatedApp = applicationService.getApplicationById(id);
+
+    // Envoi SMS si nécessaire
+    String smsMessage = null;
+
+    if ("ACCEPTED".equalsIgnoreCase(status)) {
+        smsMessage = "Bonjour " + updatedApp.getCandidateName() + ", votre candidature au poste '" +
+                updatedApp.getJobTitle() + "' a été acceptée 🎉.";
+    } else if ("REJECTED".equalsIgnoreCase(status)) {
+        smsMessage = "Bonjour " + updatedApp.getCandidateName() + ", nous sommes désolés de vous informer que votre candidature au poste '" +
+                updatedApp.getJobTitle() + "' a été refusée.";
     }
+
+    // Envoi uniquement si le message est défini et le numéro de téléphone aussi
+    if (smsMessage != null && updatedApp.getCandidatePhone() != null && !updatedApp.getCandidatePhone().isEmpty()) {
+        try {
+            twilioService.sendSms(updatedApp.getCandidatePhone(), smsMessage);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi du SMS : " + e.getMessage());
+        }
+    }
+
+    return ResponseEntity.ok(updatedApp);
+}
+
+
+
+
+
+
+
+
+    /// ////////////////////////
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteApplication(@PathVariable String id) {
@@ -94,15 +124,13 @@ public class ApplicationController {
         return ResponseEntity.noContent().build();
     }
 
-
     @PostMapping(value = "/{jobId}/apply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Application> applyToJob(
             @PathVariable String jobId,
             @RequestParam("candidateId") String candidateId,
             @RequestPart("application") String applicationJson, // JSON sous forme de texte
-            @RequestPart("file") MultipartFile file
+            @RequestPart("file") MultipartFile file) {
 
-    ) {
         // 1. Log du JSON reçu
         System.out.println("JSON reçu: " + applicationJson);
 
@@ -111,26 +139,20 @@ public class ApplicationController {
         Application application;
         try {
             application = objectMapper.readValue(applicationJson, Application.class);
-
-            // 3. Log de l'objet Application après la conversion
             System.out.println("Application convertie: " + application);
         } catch (JsonProcessingException e) {
-            // Log de l'erreur de conversion
-            e.printStackTrace();  // Affiche l'erreur détaillée
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(null);
         }
 
-        // Vérifie si le candidat a déjà postulé
         boolean alreadyApplied = applicationRepository.existsByJobIdAndCandidateId(jobId, candidateId);
         if (alreadyApplied) {
             return ResponseEntity.badRequest().body(null);
         }
 
-        // Récupérer le job en base de données
         JobPosting job = jobPostingRepository.findById(jobId)
                 .orElseThrow(() -> new JobNotFoundException("Job non trouvé avec id: " + jobId));
 
-        // Stocker le fichier CV et récupérer son chemin
         try {
             String cvUrl = cloudinaryService.uploadFile(file);
             application.setCvUrl(cvUrl);
@@ -138,17 +160,14 @@ public class ApplicationController {
             throw new RuntimeException("Échec de l'upload du CV vers Cloudinary", e);
         }
 
-        // Assigner les valeurs correctement
         application.setJobId(jobId);
         application.setJobTitle(job.getTitle());
         application.setStatus("PENDING");
         application.setExperience(application.getExperience());
         application.setCandidateId(candidateId);
 
-        // Sauvegarde de l'application
         Application savedApplication = applicationService.createApplication(application, jobId);
 
-        // Envoyer un email de confirmation
         try {
             emailService.sendEmail(
                     savedApplication.getCandidateEmail(),
@@ -157,7 +176,6 @@ public class ApplicationController {
                             "<p>Nous examinerons votre candidature et nous vous contacterons bientôt.</p>"
             );
 
-            // Notification admin
             notificationService.sendNotification(
                     "Nouvelle candidature reçue",
                     "Le candidat " + savedApplication.getCandidateName() + " a postulé pour le poste " + savedApplication.getJobTitle()
@@ -171,24 +189,14 @@ public class ApplicationController {
         return new ResponseEntity<>(savedApplication, HttpStatus.CREATED);
     }
 
-
-
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Long>> getApplicationStats() {
-        System.out.println("✅ Requête reçue pour les statistiques");
-
         Map<String, Long> stats = applicationService.getApplicationStats();
-
-        System.out.println("📊 Stats générées : " + stats);
-
-
         if (stats == null) {
             return ResponseEntity.badRequest().body(Collections.emptyMap());
         }
         return ResponseEntity.ok(stats);
-
     }
-
 
     @GetMapping("/job/{jobId}")
     public List<Application> getApplicationsByJobId(@PathVariable String jobId) {
@@ -199,7 +207,6 @@ public class ApplicationController {
         return applications;
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<Application> getApplicationById(@PathVariable String id) {
         Application application = applicationService.getApplicationById(id);
@@ -209,10 +216,20 @@ public class ApplicationController {
         return ResponseEntity.ok(application);
     }
 
+    // Méthode pour appeler le microservice Flask et obtenir un score pour la candidature
 
 
+    @GetMapping("/ranked/{jobId}")
+    public List<Application> getRankedApplications(@PathVariable String jobId) {
+        return applicationService.getRankedApplications(jobId);
+    }
 
 
+    @GetMapping("/stats/by-job")
+    public ResponseEntity<Map<String, Long>> getApplicationsCountByJob() {
+        Map<String, Long> stats = applicationService.getApplicationsCountPerJob();
+        return ResponseEntity.ok(stats);
+    }
 
 
 }

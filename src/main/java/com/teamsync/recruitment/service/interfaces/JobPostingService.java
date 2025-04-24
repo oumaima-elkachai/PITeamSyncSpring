@@ -13,5 +13,5 @@ public interface JobPostingService {
     JobPosting updateJobPosting(String id, JobPosting jobPosting);
     void deleteJobPosting(String id);
     public String uploadImage(MultipartFile file) throws Exception;
-
+    public JobPosting findJobWithMostApplications();
 }

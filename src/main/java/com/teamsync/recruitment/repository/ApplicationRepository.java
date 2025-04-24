@@ -12,5 +12,5 @@ public interface ApplicationRepository extends MongoRepository<Application, Stri
     List<Application> findByStatus(String status);
     List<Application> findByCandidateIdAndJobId(String candidateId, String jobId);
     boolean existsByJobIdAndCandidateId(String jobId, String candidateId);
-
+    int countByJobId(String jobId);
 }

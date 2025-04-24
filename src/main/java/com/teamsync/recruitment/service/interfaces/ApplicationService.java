@@ -12,7 +12,10 @@ public interface ApplicationService {
     void updateApplicationStatus(String id, String status);
     void deleteApplication(String id);
     public Map<String, Long> getApplicationStats();
-    public ApplicationDetailsDTO getApplicationWithDetails(String applicationId);
+   // public ApplicationDetailsDTO getApplicationWithDetails(String applicationId);
     List<Application> getApplicationsByJobId(String jobId);
+    public String extractTextFromCvUrl(String cvUrl);
 
+    List<Application> getRankedApplications(String jobId);
+    public Map<String, Long> getApplicationsCountPerJob();
 }

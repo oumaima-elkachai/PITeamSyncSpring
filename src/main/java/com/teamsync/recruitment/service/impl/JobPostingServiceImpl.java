@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.teamsync.recruitment.entity.JobPosting;
 import com.teamsync.recruitment.exception.JobNotFoundException;
+import com.teamsync.recruitment.repository.ApplicationRepository;
 import com.teamsync.recruitment.repository.JobPostingRepository;
 import com.teamsync.recruitment.service.CloudinaryService;
 import com.teamsync.recruitment.service.interfaces.JobPostingService;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ public class JobPostingServiceImpl implements JobPostingService {
 
     private final Cloudinary cloudinary;
     private final JobPostingRepository jobPostingRepository;
+    private final ApplicationRepository applicationRepository;
     private final CloudinaryService cloudinaryService;
 
     @Override
@@ -70,4 +73,15 @@ public class JobPostingServiceImpl implements JobPostingService {
         Map<String, String> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
         return uploadResult.get("url");  // Retourner l'URL de l'image
     }
+
+    public JobPosting findJobWithMostApplications() {
+        List<JobPosting> allJobs = jobPostingRepository.findAll();
+        return allJobs.stream()
+                .max(Comparator.comparingInt(job -> applicationRepository.countByJobId(job.getId())))
+                .orElse(null);
+    }
+
+
+
+
 }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -24,11 +25,13 @@ public class Application {
     private String candidateEmail;
     private String cvUrl;         // URL du CV (stockage cloud ou fichier base64)
     private String status;
+    @Transient
+    private Double score; // Score de matching CV
 
 
     /// //////////
 
-    private int candidatePhone;
+    private String candidatePhone;
     private String candidatePortfolio;
     private String candidateLinkedIn;
     private String candidateGithub;

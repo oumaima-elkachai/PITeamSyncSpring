@@ -1,5 +1,6 @@
 package com.example.events.entity;
 
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
@@ -23,4 +24,5 @@ public class Participation {
 
     LocalDateTime participationDate; // Date and time of participation
     private ParticipationStatus ParticipationS; 
+
 }

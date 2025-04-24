@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/participations")
+@CrossOrigin(origins = "http://localhost:4200")
 public class ParticipationController {
 
     @Autowired
@@ -75,5 +76,15 @@ public class ParticipationController {
     @GetMapping("/participant/{participantId}/audit-logs")
     public ResponseEntity<List<AuditLog>> getParticipantAuditLogs(@PathVariable String participantId) {
         return ResponseEntity.ok(auditLogService.getAuditLogsByParticipant(participantId));
+    }
+
+    @GetMapping("/event-title/{eventId}")
+    public ResponseEntity<String> getEventTitle(@PathVariable String eventId) {
+        return ResponseEntity.ok(participationService.getEventTitleForParticipation(eventId));
+    }
+
+    @GetMapping("/participant-email/{participantId}")
+    public ResponseEntity<String> getParticipantEmail(@PathVariable String participantId) {
+        return ResponseEntity.ok(participationService.getParticipantEmailForParticipation(participantId));
     }
 }

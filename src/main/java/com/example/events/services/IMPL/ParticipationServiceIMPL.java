@@ -3,10 +3,11 @@ package com.example.events.services.IMPL;
 import com.example.events.entity.Participation;
 import com.example.events.entity.ParticipationStatus;
 import com.example.events.entity.Event;
-
+import com.example.events.entity.Participant;
 import com.example.events.entity.AuditLog;
 import com.example.events.repository.ParticipationRepository;
 import com.example.events.repository.eventRepository;
+import com.example.events.repository.ParticipantRepository;
 import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +21,18 @@ public class ParticipationServiceIMPL implements IParticipationService {
 
     private final ParticipationRepository participationRepository;
     private final eventRepository eventRepository;
+    private final ParticipantRepository participantRepository;
     private final AuditLogRepository auditLogRepository;
 
     @Autowired
-    public ParticipationServiceIMPL(ParticipationRepository participationRepository, 
-                                   eventRepository eventRepository,
-                                   AuditLogRepository auditLogRepository)
-                                  {
+    public ParticipationServiceIMPL(
+            ParticipationRepository participationRepository, 
+            eventRepository eventRepository,
+            ParticipantRepository participantRepository,
+            AuditLogRepository auditLogRepository) {
         this.participationRepository = participationRepository;
         this.eventRepository = eventRepository;
+        this.participantRepository = participantRepository;
         this.auditLogRepository = auditLogRepository;
     }
 
@@ -134,5 +138,19 @@ public class ParticipationServiceIMPL implements IParticipationService {
     @Override
     public List<Participation> getAllParticipations() {
         return participationRepository.findAll();
+    }
+
+    @Override
+    public String getEventTitleForParticipation(String eventId) {
+        return eventRepository.findById(eventId)
+                .map(Event::getTitle)
+                .orElse("Unknown Event");
+    }
+
+    @Override
+    public String getParticipantEmailForParticipation(String participantId) {
+        return participantRepository.findById(participantId)
+                .map(Participant::getEmail)
+                .orElse("Unknown Participant");
     }
 }

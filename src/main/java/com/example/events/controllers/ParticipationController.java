@@ -64,16 +64,16 @@ public class ParticipationController {
 
     @GetMapping("/{id}/audit-logs")
     public ResponseEntity<List<AuditLog>> getParticipationAuditLogs(@PathVariable String id) {
-        return ResponseEntity.ok(auditLogService.getAuditLogsByParticipationId(id));
+        return ResponseEntity.ok(auditLogService.getAuditLogsByParticipation(id));
     }
 
     @GetMapping("/event/{eventId}/audit-logs")
     public ResponseEntity<List<AuditLog>> getEventAuditLogs(@PathVariable String eventId) {
-        return ResponseEntity.ok(auditLogService.getAuditLogsByEventId(eventId));
+        return ResponseEntity.ok(auditLogService.getAuditLogsByEvent(eventId));
     }
 
     @GetMapping("/participant/{participantId}/audit-logs")
     public ResponseEntity<List<AuditLog>> getParticipantAuditLogs(@PathVariable String participantId) {
-        return ResponseEntity.ok(auditLogService.getAuditLogsByParticipantId(participantId));
+        return ResponseEntity.ok(auditLogService.getAuditLogsByParticipant(participantId));
     }
 }

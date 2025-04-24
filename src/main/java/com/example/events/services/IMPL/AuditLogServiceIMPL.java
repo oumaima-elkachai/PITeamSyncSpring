@@ -19,32 +19,23 @@ public class AuditLogServiceIMPL implements IAuditLogService {
     }
 
     @Override
-    public AuditLog createAuditLog(String action, String participationId, String eventId, String participantId, String details) {
-        AuditLog auditLog = new AuditLog();
-        auditLog.setAction(action);
-        auditLog.setParticipationId(participationId);
-        auditLog.setEventId(eventId);
-        auditLog.setParticipantId(participantId);
-        auditLog.setPerformedBy("system"); // TODO: Replace with actual user when authentication is implemented
-        auditLog.setTimestamp(LocalDateTime.now());
-        auditLog.setDetails(details);
-        
-        return auditLogRepository.save(auditLog);
-    }
-
-    @Override
-    public List<AuditLog> getAuditLogsByParticipationId(String participationId) {
+    public List<AuditLog> getAuditLogsByParticipation(String participationId) {
         return auditLogRepository.findByParticipationId(participationId);
     }
 
     @Override
-    public List<AuditLog> getAuditLogsByEventId(String eventId) {
+    public List<AuditLog> getAuditLogsByEvent(String eventId) {
         return auditLogRepository.findByEventId(eventId);
     }
 
     @Override
-    public List<AuditLog> getAuditLogsByParticipantId(String participantId) {
+    public List<AuditLog> getAuditLogsByParticipant(String participantId) {
         return auditLogRepository.findByParticipantId(participantId);
+    }
+
+    @Override
+    public List<AuditLog> getAuditLogsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        return auditLogRepository.findByTimestampBetween(startDate, endDate);
     }
 
     @Override
@@ -52,8 +43,6 @@ public class AuditLogServiceIMPL implements IAuditLogService {
         return auditLogRepository.findAll();
     }
 
-    @Override
-    public void deleteAuditLog(String id) {
-        auditLogRepository.deleteById(id);
-    }
+
+
 }

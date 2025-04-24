@@ -3,7 +3,7 @@ package com.example.events.services.IMPL;
 import com.example.events.entity.Reclamation;
 import com.example.events.repository.ReclamationRepository;
 import com.example.events.services.interfaces.IReclamationService;
-import com.example.events.services.interfaces.INotificationService;
+//import com.example.events.services.interfaces.INotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -13,13 +13,11 @@ import java.util.List;
 public class ReclamationServiceIMPL implements IReclamationService {
 
     private final ReclamationRepository reclamationRepository;
-    private final INotificationService notificationService;
 
     @Autowired
-    public ReclamationServiceIMPL(ReclamationRepository reclamationRepository, 
-                                 INotificationService notificationService) {
+    public ReclamationServiceIMPL(ReclamationRepository reclamationRepository)
+                            {
         this.reclamationRepository = reclamationRepository;
-        this.notificationService = notificationService;
     }
 
     @Override
@@ -28,9 +26,8 @@ public class ReclamationServiceIMPL implements IReclamationService {
         reclamation.setStatus("PENDING");
         Reclamation saved = reclamationRepository.save(reclamation);
         
-        // Notify relevant parties
-        notificationService.notifyEventUpdate(reclamation.getEventId(), 
-            "New reclamation submitted for event");
+     
+      
         
         return saved;
     }
@@ -94,9 +91,7 @@ public class ReclamationServiceIMPL implements IReclamationService {
         
         Reclamation resolved = reclamationRepository.save(reclamation);
         
-        // Notify participant
-        notificationService.notifyParticipant(reclamation.getParticipantId(),
-            "Your reclamation has been resolved");
+     
         
         return resolved;
     }

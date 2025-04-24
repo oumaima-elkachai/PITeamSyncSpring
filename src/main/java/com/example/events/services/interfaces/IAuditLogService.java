@@ -1,13 +1,17 @@
 package com.example.events.services.interfaces;
 
 import com.example.events.entity.AuditLog;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IAuditLogService {
-    AuditLog createAuditLog(String action, String participationId, String eventId, String participantId, String details);
-    List<AuditLog> getAuditLogsByParticipationId(String participationId);
-    List<AuditLog> getAuditLogsByEventId(String eventId);
-    List<AuditLog> getAuditLogsByParticipantId(String participantId);
+
+     List<AuditLog> getAuditLogsByParticipation(String participationId);
+    List<AuditLog> getAuditLogsByEvent(String eventId);
+    List<AuditLog> getAuditLogsByParticipant(String participantId);
+    List<AuditLog> getAuditLogsByDateRange(LocalDateTime startDate, LocalDateTime endDate);
     List<AuditLog> getAllAuditLogs();
-    void deleteAuditLog(String id);
+
 }
+

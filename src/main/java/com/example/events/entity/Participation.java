@@ -22,5 +22,5 @@ public class Participation {
     String eventId;       // ID of the event
 
     LocalDateTime participationDate; // Date and time of participation
-    String status; // Status of participation (e.g., "CONFIRMED", "CANCELLED", "PENDING")
+    private ParticipationStatus ParticipationS; 
 }

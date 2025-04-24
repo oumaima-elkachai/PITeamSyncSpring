@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/events")
+@CrossOrigin(origins = "http://localhost:4200")
 public class EventController {
 
     @Autowired

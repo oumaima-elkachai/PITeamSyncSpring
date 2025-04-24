@@ -1,13 +1,14 @@
 package com.example.events.services.IMPL;
 
 import com.example.events.entity.Participation;
+import com.example.events.entity.ParticipationStatus;
 import com.example.events.entity.Event;
+
 import com.example.events.entity.AuditLog;
 import com.example.events.repository.ParticipationRepository;
 import com.example.events.repository.eventRepository;
 import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
-import com.example.events.services.interfaces.INotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +21,15 @@ public class ParticipationServiceIMPL implements IParticipationService {
     private final ParticipationRepository participationRepository;
     private final eventRepository eventRepository;
     private final AuditLogRepository auditLogRepository;
-    private final INotificationService notificationService;
 
     @Autowired
     public ParticipationServiceIMPL(ParticipationRepository participationRepository, 
                                    eventRepository eventRepository,
-                                   AuditLogRepository auditLogRepository,
-                                   INotificationService notificationService) {
+                                   AuditLogRepository auditLogRepository)
+                                  {
         this.participationRepository = participationRepository;
         this.eventRepository = eventRepository;
         this.auditLogRepository = auditLogRepository;
-        this.notificationService = notificationService;
     }
 
     private void createAuditLog(String action, Participation participation, String details) {
@@ -48,39 +47,30 @@ public class ParticipationServiceIMPL implements IParticipationService {
 
     @Override
     public Participation addParticipation(Participation participation) {
-        // Check if event exists using idEvent
         Event event = eventRepository.findByIdEvent(participation.getEventId())
                 .orElseThrow(() -> new IllegalArgumentException("Event not found with idEvent: " + participation.getEventId()));
 
         // Get current number of active participants
         long currentParticipants = participationRepository.findByEventId(participation.getEventId())
                 .stream()
-                .filter(p -> !p.getStatus().equals("CANCELLED"))
+                .filter(p -> !p.getParticipationS().equals(ParticipationStatus.REFUSED))
                 .count();
 
         // Set participation date
-        participation.setParticipationDate(java.time.LocalDateTime.now());
+        participation.setParticipationDate(LocalDateTime.now());
 
         // Check if event is at capacity
         if (event.getCapacity() != null && currentParticipants >= event.getCapacity()) {
-            participation.setStatus("WAITLISTED");
+            participation.setParticipationS(ParticipationStatus.WAITLISTED);
         } else {
-            participation.setStatus("PENDING");
+            participation.setParticipationS(ParticipationStatus.PENDING);
         }
 
         Participation savedParticipation = participationRepository.save(participation);
         
         // Create audit log for new participation
         createAuditLog("ADD", savedParticipation, 
-            String.format("Added participant to event with status: %s", participation.getStatus()));
-        
-        // Send notification
-        notificationService.notifyParticipant(
-            participation.getParticipantId(),
-            String.format("You have been %s to event %s", 
-                participation.getStatus().equals("WAITLISTED") ? "waitlisted" : "added",
-                participation.getEventId())
-        );
+            String.format("Added participant to event with status: %s", participation.getParticipationS()));
         
         return savedParticipation;
     }
@@ -90,25 +80,33 @@ public class ParticipationServiceIMPL implements IParticipationService {
         Participation participation = participationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Participation with ID " + id + " not found."));
 
-        // Validate the new status
-        if (!isValidStatus(newStatus)) {
+        // Validate and convert the status
+        ParticipationStatus status;
+        try {
+            status = ParticipationStatus.valueOf(newStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status: " + newStatus);
         }
 
-        String oldStatus = participation.getStatus();
-        participation.setStatus(newStatus);
+        ParticipationStatus oldStatus = participation.getParticipationS();
+        participation.setParticipationS(status);
         
         Participation updatedParticipation = participationRepository.save(participation);
         
         // Create audit log for status update
         createAuditLog("UPDATE", updatedParticipation, 
-            String.format("Status changed from %s to %s", oldStatus, newStatus));
+            String.format("Status changed from %s to %s", oldStatus, status));
         
         return updatedParticipation;
     }
 
     private boolean isValidStatus(String status) {
-        return status.equals("CONFIRMED") || status.equals("CANCELLED") || status.equals("WAITLISTED") || status.equals("PENDING");
+        try {
+            ParticipationStatus.valueOf(status.toUpperCase());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     @Override
@@ -128,12 +126,7 @@ public class ParticipationServiceIMPL implements IParticipationService {
             
         // Create audit log before deletion
         createAuditLog("REMOVE", participation, "Removed participant from event");
-        
-        // Send notification before deletion
-        notificationService.notifyParticipant(
-            participation.getParticipantId(),
-            "You have been removed from event " + participation.getEventId()
-        );
+    
         
         participationRepository.deleteById(id);
     }

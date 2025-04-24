@@ -17,4 +17,5 @@ public class Attachment {
     private long fileSize;
     private LocalDateTime uploadedAt;
     private String uploadedBy; // employee ID
+    private String gridFsId;
 }

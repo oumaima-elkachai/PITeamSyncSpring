@@ -37,6 +37,13 @@ public class AttachmentController {
         return ResponseEntity.ok(attachments);
     }
 
+    // AttachmentController.java
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAttachment(@PathVariable String id) {
+        attachmentService.deleteAttachment(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/download/{id}")
     public ResponseEntity<byte[]> downloadFile(@PathVariable String id) {
         return attachmentService.downloadFile(id);

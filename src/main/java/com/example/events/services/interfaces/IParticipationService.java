@@ -14,4 +14,6 @@ public interface IParticipationService {
     String getParticipantEmailForParticipation(String participantId);
     List<Participation> getParticipationsByEventTitle(String title);
     List<Participation> getParticipationsByParticipantEmail(String email);
+    Participation confirmParticipation(String id);  // Note: Changed from Long to String to match your ID type
+    String getParticipantNameForParticipation(String participantId);
 }

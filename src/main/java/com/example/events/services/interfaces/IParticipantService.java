@@ -14,4 +14,6 @@ public interface IParticipantService {
     void deleteParticipant(String id);
 
     Participant updateParticipant(String id, Participant participantDetails);
+
+    String getParticipantName(String participantId);
 }

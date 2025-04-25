@@ -10,8 +10,11 @@ import com.example.events.repository.eventRepository;
 import com.example.events.repository.ParticipantRepository;
 import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
+import com.example.events.services.interfaces.IParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.events.exception.ResourceNotFoundException;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,17 +28,20 @@ public class ParticipationServiceIMPL implements IParticipationService {
     private final eventRepository eventRepository;
     private final ParticipantRepository participantRepository;
     private final AuditLogRepository auditLogRepository;
+    private final IParticipantService participantService;
 
     @Autowired
     public ParticipationServiceIMPL(
             ParticipationRepository participationRepository, 
             eventRepository eventRepository,
             ParticipantRepository participantRepository,
-            AuditLogRepository auditLogRepository) {
+            AuditLogRepository auditLogRepository,
+            IParticipantService participantService) {
         this.participationRepository = participationRepository;
         this.eventRepository = eventRepository;
         this.participantRepository = participantRepository;
         this.auditLogRepository = auditLogRepository;
+        this.participantService = participantService;
     }
 
     private void createAuditLog(String action, Participation participation, String details) {
@@ -84,26 +90,32 @@ public class ParticipationServiceIMPL implements IParticipationService {
     @Override
     public Participation updateParticipationStatus(String id, String newStatus) {
         Participation participation = participationRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Participation with ID " + id + " not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Participation not found with id: " + id));
 
-        // Validate and convert the status
-        ParticipationStatus status;
         try {
-            status = ParticipationStatus.valueOf(newStatus.toUpperCase());
+            ParticipationStatus status = ParticipationStatus.valueOf(newStatus.toUpperCase());
+            ParticipationStatus oldStatus = participation.getParticipationS();
+            participation.setParticipationS(status);
+            
+            Participation updatedParticipation = participationRepository.save(participation);
+            
+            // Create audit log
+            createAuditLog("UPDATE", updatedParticipation, 
+                String.format("Status changed from %s to %s", oldStatus, status));
+            
+            return updatedParticipation;
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status: " + newStatus);
         }
+    }
 
-        ParticipationStatus oldStatus = participation.getParticipationS();
-        participation.setParticipationS(status);
+    @Override
+    public Participation confirmParticipation(String id) {
+        Participation participation = participationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Participation not found with id: " + id));
         
-        Participation updatedParticipation = participationRepository.save(participation);
-        
-        // Create audit log for status update
-        createAuditLog("UPDATE", updatedParticipation, 
-            String.format("Status changed from %s to %s", oldStatus, status));
-        
-        return updatedParticipation;
+        participation.setParticipationS(ParticipationStatus.CONFIRMED);
+        return participationRepository.save(participation);
     }
 
     private boolean isValidStatus(String status) {
@@ -171,5 +183,12 @@ public class ParticipationServiceIMPL implements IParticipationService {
             return participationRepository.findByParticipantId(participant.getId());
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public String getParticipantNameForParticipation(String participantId) {
+        return participantRepository.findById(participantId)
+                .map(participant -> participant.getName())
+                .orElse("Unknown Participant");
     }
 }

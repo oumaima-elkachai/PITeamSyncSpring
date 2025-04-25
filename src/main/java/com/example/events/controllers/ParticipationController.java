@@ -1,4 +1,3 @@
-// filepath: c:\Users\ASUS-INFOTEC\Documents\GitHub\PITeamSyncSpring\src\main\java\com\example\events\controllers\ParticipationController.java
 package com.example.events.controllers;
 
 import com.example.events.entity.Participation;
@@ -6,6 +5,7 @@ import com.example.events.entity.AuditLog;
 import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
 import com.example.events.services.interfaces.IAuditLogService;
+import com.example.events.services.interfaces.IEmailService;
 import com.example.events.services.interfaces.IEventStatisticsService;
 import com.example.events.entity.EventStatistics;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,9 @@ import java.util.List;
 @RequestMapping("/api/participations")
 @CrossOrigin(origins = "http://localhost:4200")
 public class ParticipationController {
-
+    
+    @Autowired
+    private IEmailService emailService;  // Update this line
     @Autowired
     private IParticipationService participationService;
 
@@ -37,8 +39,15 @@ public class ParticipationController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Participation> updateParticipationStatus(@PathVariable String id, @RequestParam String status) {
-        return ResponseEntity.ok(participationService.updateParticipationStatus(id, status));
+    public ResponseEntity<?> updateParticipationStatus(
+        @PathVariable String id,
+        @RequestBody String status) {
+        try {
+            Participation participation = participationService.updateParticipationStatus(id, status);
+            return ResponseEntity.ok(participation);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/by-participant/{participantId}")
@@ -111,4 +120,26 @@ public class ParticipationController {
         List<Participation> participations = participationService.getParticipationsByParticipantEmail(email);
         return ResponseEntity.ok(participations);
     }
+
+    @PutMapping("/confirm/{id}")
+    public ResponseEntity<?> confirmParticipation(@PathVariable String id) {
+        Participation participation = participationService.confirmParticipation(id);
+        
+        // Get participant email and name
+        String participantEmail = participationService.getParticipantEmailForParticipation(participation.getParticipantId());
+        String participantName = participationService.getParticipantNameForParticipation(participation.getParticipantId());
+        
+        // Get event name
+        String eventName = participationService.getEventTitleForParticipation(participation.getEventId());
+        
+        emailService.sendParticipationConfirmationEmail(
+            participantEmail,
+            participantName,
+            eventName
+        );
+        
+        return ResponseEntity.ok().build();
+    }
 }
+
+// Removed StatusUpdateRequest class to place it in its own file

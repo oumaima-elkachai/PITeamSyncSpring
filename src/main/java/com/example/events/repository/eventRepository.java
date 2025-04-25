@@ -13,6 +13,7 @@ public interface eventRepository extends MongoRepository<Event, String> {
     List<Event> findByStartDate(LocalDate startDate);
     List<Event> findByStartDateBetween(LocalDate startDate, LocalDate endDate);
     List<Event> findByParticipantIdContaining(String id);
+    List<Event> findByTitleContainingIgnoreCase(String title);
 
     @Query(value = "{ 'id': ?0 }")
     Optional<Event> findById(String id);

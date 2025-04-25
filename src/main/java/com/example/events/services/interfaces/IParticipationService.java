@@ -12,4 +12,6 @@ public interface IParticipationService {
     List<Participation> getParticipationsByEvent(String eventId);
     String getEventTitleForParticipation(String eventId);
     String getParticipantEmailForParticipation(String participantId);
+    List<Participation> getParticipationsByEventTitle(String title);
+    List<Participation> getParticipationsByParticipantEmail(String email);
 }

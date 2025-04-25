@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 @Service
 public class ParticipationServiceIMPL implements IParticipationService {
@@ -152,5 +154,22 @@ public class ParticipationServiceIMPL implements IParticipationService {
         return participantRepository.findById(participantId)
                 .map(Participant::getEmail)
                 .orElse("Unknown Participant");
+    }
+
+    @Override
+    public List<Participation> getParticipationsByEventTitle(String title) {
+        List<Event> events = eventRepository.findByTitleContainingIgnoreCase(title);
+        return events.stream()
+                .flatMap(event -> participationRepository.findByEventId(event.getIdEvent()).stream())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Participation> getParticipationsByParticipantEmail(String email) {
+        Participant participant = participantRepository.findByEmail(email);
+        if (participant != null) {
+            return participationRepository.findByParticipantId(participant.getId());
+        }
+        return Collections.emptyList();
     }
 }

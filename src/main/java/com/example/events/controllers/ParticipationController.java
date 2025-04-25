@@ -6,6 +6,8 @@ import com.example.events.entity.AuditLog;
 import com.example.events.repository.AuditLogRepository;
 import com.example.events.services.interfaces.IParticipationService;
 import com.example.events.services.interfaces.IAuditLogService;
+import com.example.events.services.interfaces.IEventStatisticsService;
+import com.example.events.entity.EventStatistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,9 @@ public class ParticipationController {
 
     @Autowired
     private IAuditLogService auditLogService;
+
+    @Autowired
+    private IEventStatisticsService statisticsService;
 
     @PostMapping
     public ResponseEntity<Participation> addParticipation(@RequestBody Participation participation) {
@@ -86,5 +91,24 @@ public class ParticipationController {
     @GetMapping("/participant-email/{participantId}")
     public ResponseEntity<String> getParticipantEmail(@PathVariable String participantId) {
         return ResponseEntity.ok(participationService.getParticipantEmailForParticipation(participantId));
+    }
+
+    @GetMapping("/statistics/{eventId}")
+    public ResponseEntity<EventStatistics> getEventStatistics(@PathVariable String eventId) {
+        return ResponseEntity.ok(statisticsService.getEventStatistics(eventId));
+    }
+
+    @PostMapping("/statistics/{eventId}/update")
+    public ResponseEntity<EventStatistics> updateEventStatistics(@PathVariable String eventId) {        return ResponseEntity.ok(statisticsService.updateEventStatistics(eventId));    }
+    @GetMapping("/filter/event-title/{title}")
+    public ResponseEntity<List<Participation>> getParticipationsByEventTitle(@PathVariable String title) {
+        List<Participation> participations = participationService.getParticipationsByEventTitle(title);
+        return ResponseEntity.ok(participations);
+    }
+
+    @GetMapping("/filter/participant-email/{email}")
+    public ResponseEntity<List<Participation>> getParticipationsByParticipantEmail(@PathVariable String email) {
+        List<Participation> participations = participationService.getParticipationsByParticipantEmail(email);
+        return ResponseEntity.ok(participations);
     }
 }

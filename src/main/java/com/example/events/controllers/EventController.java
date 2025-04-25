@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/events")
@@ -28,9 +31,11 @@ public class EventController {
         return ResponseEntity.ok(events);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<Event> addEvent(@RequestBody Event event) {
-        Event savedEvent = eventService.addEvent(event);
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Event> addEvent(
+            @RequestPart("event") Event event,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
+        Event savedEvent = eventService.addEvent(event, imageFile);
         return ResponseEntity.ok(savedEvent);
     }
 

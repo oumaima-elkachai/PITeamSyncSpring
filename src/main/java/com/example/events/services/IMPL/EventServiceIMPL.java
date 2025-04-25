@@ -6,16 +6,22 @@ import com.example.events.services.interfaces.IEventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.cloudinary.Cloudinary;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class EventServiceIMPL implements IEventService {
 
     @Autowired
     private eventRepository eventRepository;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     @Override
     public Page<Event> getAllEventsPaginated(int page, int size) {
@@ -30,6 +36,17 @@ public class EventServiceIMPL implements IEventService {
     @Override
     public Event addEvent(Event event) {
         validateEventDates(event);
+        return eventRepository.save(event);
+    }
+
+    @Override
+    public Event addEvent(Event event, MultipartFile imageFile) throws IOException {
+        validateEventDates(event);
+        if (imageFile != null && !imageFile.isEmpty()) {
+            Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), Map.of());
+            String imageUrl = (String) uploadResult.get("url");
+            event.setImageUrl(imageUrl);
+        }
         return eventRepository.save(event);
     }
 

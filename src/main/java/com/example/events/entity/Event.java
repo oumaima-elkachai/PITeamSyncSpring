@@ -53,11 +53,9 @@ public class Event {
     @DBRef(lazy = true)
     private List<Reclamation> reclamations;
 
-    private Integer capacity; // Maximum number of participants allowed
+    private Integer capacity; 
+    private String imageUrl;
 
-    //  private List<Participant> participants;
-
-    // Date/time convenience methods
     public LocalDateTime getStartDateTime() {
         return startDate.atTime(startTime != null ? startTime : LocalTime.MIN);
     }
@@ -179,5 +177,13 @@ public class Event {
 
     public void setCapacity(Integer capacity) {
         this.capacity = capacity;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

@@ -15,6 +15,7 @@ public interface IEventService {
     Event getEventById(String id);
     void deleteEvent(String id);
     Event updateEvent(String id, Event eventDetails);
+    Event updateEvent(String id, Event eventDetails, MultipartFile imageFile) throws IOException;
     void addParticipantToEvent(String eventId, String participantId);
     void removeParticipantFromEvent(String eventId, String participantId);
     List<Event> getEventsByStartDate(LocalDate startDate);

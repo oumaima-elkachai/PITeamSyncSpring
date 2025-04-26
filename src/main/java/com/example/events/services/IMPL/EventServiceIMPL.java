@@ -92,6 +92,30 @@ public class EventServiceIMPL implements IEventService {
         return eventRepository.save(existingEvent);
     }
 
+    @Override
+    public Event updateEvent(String id, Event eventDetails, MultipartFile imageFile) throws IOException {
+        Event existingEvent = getEventById(id);
+        validateEventDates(eventDetails);
+
+        // Update fields if they are not null
+        if (eventDetails.getTitle() != null) existingEvent.setTitle(eventDetails.getTitle());
+        if (eventDetails.getDescription() != null) existingEvent.setDescription(eventDetails.getDescription());
+        if (eventDetails.getTypeS() != null) existingEvent.setTypeS(eventDetails.getTypeS());
+        if (eventDetails.getStartDate() != null) existingEvent.setStartDate(eventDetails.getStartDate());
+        if (eventDetails.getEndDate() != null) existingEvent.setEndDate(eventDetails.getEndDate());
+        if (eventDetails.getStartTime() != null) existingEvent.setStartTime(eventDetails.getStartTime());
+        if (eventDetails.getEndTime() != null) existingEvent.setEndTime(eventDetails.getEndTime());
+
+        // Handle image update
+        if (imageFile != null && !imageFile.isEmpty()) {
+            Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), Map.of());
+            String imageUrl = (String) uploadResult.get("url");
+            existingEvent.setImageUrl(imageUrl);
+        }
+
+        return eventRepository.save(existingEvent);
+    }
+
     private void validateEventDates(Event event) {
         if (event.getEndDate().isBefore(event.getStartDate())) {
             throw new IllegalArgumentException("End date cannot be before start date");

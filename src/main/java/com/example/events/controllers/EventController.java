@@ -49,9 +49,12 @@ public class EventController {
         eventService.deleteEvent(id);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable String id, @RequestBody Event eventDetails) {
-        return ResponseEntity.ok(eventService.updateEvent(id, eventDetails));
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Event> updateEvent(
+            @PathVariable String id,
+            @RequestPart("event") Event eventDetails,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
+        return ResponseEntity.ok(eventService.updateEvent(id, eventDetails, imageFile));
     }
 
     @DeleteMapping("/{eventId}/participants/{participantId}")

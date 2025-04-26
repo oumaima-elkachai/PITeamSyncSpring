@@ -1,6 +1,7 @@
 package com.example.events.services.interfaces;
 
 import com.example.events.entity.Event;
+import com.example.events.entity.Participation;
 import com.example.events.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ public interface IEventService {
     Event updateEvent(String id, Event eventDetails) throws ResourceNotFoundException;
     Event updateEvent(String id, Event eventDetails, MultipartFile imageFile) throws IOException, ResourceNotFoundException;
     void addParticipantToEvent(String eventId, String participantId);
+    Participation addParticipantToEvent(String eventId, String participantId, String status);
     void removeParticipantFromEvent(String eventId, String participantId);
     List<Event> getEventsByStartDate(LocalDate startDate);
     List<Event> getEventsByDateRange(LocalDate startDate, LocalDate endDate);

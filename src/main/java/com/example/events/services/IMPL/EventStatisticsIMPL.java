@@ -26,7 +26,7 @@ public class EventStatisticsIMPL implements IEventStatisticsService {
         return statisticsRepository.findByEventId(eventId);
     }
 
-    @Override
+ /*  @Override
     public EventStatistics updateEventStatistics(String eventId) {
         EventStatistics statistics = new EventStatistics();
         statistics.setEventId(eventId);
@@ -44,5 +44,5 @@ public class EventStatisticsIMPL implements IEventStatisticsService {
                 .filter(p -> p.getParticipationS() == ParticipationStatus.WAITLISTED).count());
                 
         return statisticsRepository.save(statistics);
-    }
+    }*/
 }

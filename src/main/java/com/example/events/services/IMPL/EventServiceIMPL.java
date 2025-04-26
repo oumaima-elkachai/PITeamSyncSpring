@@ -1,7 +1,10 @@
 package com.example.events.services.IMPL;
 
 import com.example.events.entity.Event;
+import com.example.events.entity.Participation;
+import com.example.events.entity.ParticipationStatus;
 import com.example.events.repository.eventRepository;
+import com.example.events.repository.ParticipationRepository;
 import com.example.events.services.interfaces.IEventService;
 import com.example.events.exception.ResourceNotFoundException;  // Fix import path
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,8 @@ import com.cloudinary.Cloudinary;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +28,9 @@ public class EventServiceIMPL implements IEventService {
 
     @Autowired
     private Cloudinary cloudinary;
+
+    @Autowired
+    private ParticipationRepository participationRepository;
 
     @Override
     public Page<Event> getAllEventsPaginated(int page, int size) {
@@ -150,13 +158,54 @@ public class EventServiceIMPL implements IEventService {
     }
 
     @Override
+    public Participation addParticipantToEvent(String eventId, String participantId, String status) {
+        // Check if event exists
+        Event event = getEventById(eventId);
+
+        // Check if participation already exists
+        if (participationRepository.existsByEventIdAndParticipantId(eventId, participantId)) {
+            throw new IllegalStateException("Participant is already registered for this event");
+        }
+
+        // Create new participation
+        Participation participation = new Participation();
+        participation.setEventId(eventId);
+        participation.setParticipantId(participantId);
+        participation.setParticipationStatus(ParticipationStatus.valueOf(status.toUpperCase()));
+        participation.setParticipationDate(LocalDateTime.now());
+
+        // Save participation
+        Participation savedParticipation = participationRepository.save(participation);
+
+        // Update event's participant list
+        if (event.getParticipantId() == null) {
+            event.setParticipantId(new ArrayList<>());
+        }
+        event.getParticipantId().add(participantId);
+        eventRepository.save(event);
+
+        return savedParticipation;
+    }
+
+    @Override
     public void addParticipantToEvent(String eventId, String participantId) {
-        // Implementation needed
+        Event event = getEventById(eventId);
+        if (event.getParticipantId() == null) {
+            event.setParticipantId(new ArrayList<>());
+        }
+        if (!event.getParticipantId().contains(participantId)) {
+            event.getParticipantId().add(participantId);
+            eventRepository.save(event);
+        }
     }
 
     @Override
     public void removeParticipantFromEvent(String eventId, String participantId) {
-        // Implementation needed
+        Event event = getEventById(eventId);
+        if (event.getParticipantId() != null) {
+            event.getParticipantId().remove(participantId);
+            eventRepository.save(event);
+        }
     }
 
     public List<Event> getEventsByDate(LocalDate date) {

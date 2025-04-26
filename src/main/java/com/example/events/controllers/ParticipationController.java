@@ -107,8 +107,12 @@ public class ParticipationController {
         return ResponseEntity.ok(statisticsService.getEventStatistics(eventId));
     }
 
-    @PostMapping("/statistics/{eventId}/update")
-    public ResponseEntity<EventStatistics> updateEventStatistics(@PathVariable String eventId) {        return ResponseEntity.ok(statisticsService.updateEventStatistics(eventId));    }
+    /*@PostMapping("/statistics/{eventId}/update")
+    public ResponseEntity<EventStatistics> updateEventStatistics(@PathVariable String eventId) {        
+        return ResponseEntity.ok(statisticsService.updateEventStatistics(eventId));    
+    }*/
+
+
     @GetMapping("/filter/event-title/{title}")
     public ResponseEntity<List<Participation>> getParticipationsByEventTitle(@PathVariable String title) {
         List<Participation> participations = participationService.getParticipationsByEventTitle(title);

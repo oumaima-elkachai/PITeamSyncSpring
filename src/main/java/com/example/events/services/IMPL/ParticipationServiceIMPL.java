@@ -65,7 +65,7 @@ public class ParticipationServiceIMPL implements IParticipationService {
         // Get current number of active participants
         long currentParticipants = participationRepository.findByEventId(participation.getEventId())
                 .stream()
-                .filter(p -> !p.getParticipationS().equals(ParticipationStatus.REFUSED))
+                .filter(p -> !p.getParticipationStatus().equals(ParticipationStatus.REFUSED))
                 .count();
 
         // Set participation date
@@ -73,16 +73,16 @@ public class ParticipationServiceIMPL implements IParticipationService {
 
         // Check if event is at capacity
         if (event.getCapacity() != null && currentParticipants >= event.getCapacity()) {
-            participation.setParticipationS(ParticipationStatus.WAITLISTED);
+            participation.setParticipationStatus(ParticipationStatus.WAITLISTED);
         } else {
-            participation.setParticipationS(ParticipationStatus.PENDING);
+            participation.setParticipationStatus(ParticipationStatus.PENDING);
         }
 
         Participation savedParticipation = participationRepository.save(participation);
         
         // Create audit log for new participation
         createAuditLog("ADD", savedParticipation, 
-            String.format("Added participant to event with status: %s", participation.getParticipationS()));
+            String.format("Added participant to event with status: %s", participation.getParticipationStatus()));
         
         return savedParticipation;
     }
@@ -94,8 +94,8 @@ public class ParticipationServiceIMPL implements IParticipationService {
 
         try {
             ParticipationStatus status = ParticipationStatus.valueOf(newStatus.toUpperCase());
-            ParticipationStatus oldStatus = participation.getParticipationS();
-            participation.setParticipationS(status);
+            ParticipationStatus oldStatus = participation.getParticipationStatus();
+            participation.setParticipationStatus(status);
             
             Participation updatedParticipation = participationRepository.save(participation);
             
@@ -114,7 +114,7 @@ public class ParticipationServiceIMPL implements IParticipationService {
         Participation participation = participationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Participation not found with id: " + id));
         
-        participation.setParticipationS(ParticipationStatus.CONFIRMED);
+        participation.setParticipationStatus(ParticipationStatus.CONFIRMED);
         return participationRepository.save(participation);
     }
 

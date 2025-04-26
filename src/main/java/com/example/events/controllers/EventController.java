@@ -2,10 +2,12 @@ package com.example.events.controllers;
 
 import com.example.events.entity.Event;
 import com.example.events.services.interfaces.IEventService;
-import com.example.events.exception.ResourceNotFoundException;  // Add this import
+import com.example.events.exception.ResourceNotFoundException;
+import com.example.events.entity.Participation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -14,6 +16,8 @@ import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/events")
@@ -83,15 +87,47 @@ public class EventController {
     }
 
     @DeleteMapping("/{eventId}/participants/{participantId}")
-    public ResponseEntity<String> removeParticipant(@PathVariable String eventId, @PathVariable String participantId) {
-        eventService.removeParticipantFromEvent(eventId, participantId);
-        return ResponseEntity.ok("Participant removed successfully");
+    public ResponseEntity<Map<String, String>> removeParticipant(
+            @PathVariable String eventId, 
+            @PathVariable String participantId) {
+        try {
+            eventService.removeParticipantFromEvent(eventId, participantId);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Participant removed successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @PostMapping("/{eventId}/participants/{participantId}")
-    public ResponseEntity<String> addParticipant(@PathVariable String eventId, @PathVariable String participantId) {
-        eventService.addParticipantToEvent(eventId, participantId);
-        return ResponseEntity.ok("Participant added successfully");
+    public ResponseEntity<Map<String, Object>> addParticipant(
+            @PathVariable String eventId,
+            @PathVariable String participantId,
+            @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String status = body != null ? body.get("status") : "PENDING";
+            Participation participation = eventService.addParticipantToEvent(eventId, participantId, status);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Participant added successfully");
+            response.put("data", participation);
+            
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.ok(response);
+        }
     }
 
     @GetMapping("/by-date")

@@ -4,5 +4,5 @@ import com.example.events.entity.EventStatistics;
 
 public interface IEventStatisticsService {
     EventStatistics getEventStatistics(String eventId);
-    EventStatistics updateEventStatistics(String eventId);
+  //  EventStatistics updateEventStatistics(String eventId);
 }

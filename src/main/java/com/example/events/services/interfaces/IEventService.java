@@ -1,6 +1,7 @@
 package com.example.events.services.interfaces;
 
 import com.example.events.entity.Event;
+import com.example.events.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -9,13 +10,13 @@ import java.util.List;
 
 public interface IEventService {
     Page<Event> getAllEventsPaginated(int page, int size);
-    List<Event> getAllEvents();
-    Event addEvent(Event event);
-    Event addEvent(Event event, MultipartFile imageFile) throws IOException;
-    Event getEventById(String id);
-    void deleteEvent(String id);
-    Event updateEvent(String id, Event eventDetails);
-    Event updateEvent(String id, Event eventDetails, MultipartFile imageFile) throws IOException;
+    List<Event> getAllEvents() throws Exception;
+    Event addEvent(Event event) throws Exception;
+    Event addEvent(Event event, MultipartFile imageFile) throws IOException, Exception;
+    Event getEventById(String id) throws ResourceNotFoundException;
+    void deleteEvent(String id) throws ResourceNotFoundException;
+    Event updateEvent(String id, Event eventDetails) throws ResourceNotFoundException;
+    Event updateEvent(String id, Event eventDetails, MultipartFile imageFile) throws IOException, ResourceNotFoundException;
     void addParticipantToEvent(String eventId, String participantId);
     void removeParticipantFromEvent(String eventId, String participantId);
     List<Event> getEventsByStartDate(LocalDate startDate);

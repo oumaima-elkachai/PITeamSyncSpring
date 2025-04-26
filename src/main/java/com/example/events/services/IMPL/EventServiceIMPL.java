@@ -3,6 +3,7 @@ package com.example.events.services.IMPL;
 import com.example.events.entity.Event;
 import com.example.events.repository.eventRepository;
 import com.example.events.services.interfaces.IEventService;
+import com.example.events.exception.ResourceNotFoundException;  // Fix import path
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,9 +44,13 @@ public class EventServiceIMPL implements IEventService {
     public Event addEvent(Event event, MultipartFile imageFile) throws IOException {
         validateEventDates(event);
         if (imageFile != null && !imageFile.isEmpty()) {
-            Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), Map.of());
-            String imageUrl = (String) uploadResult.get("url");
-            event.setImageUrl(imageUrl);
+            try {
+                Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), Map.of());
+                String imageUrl = (String) uploadResult.get("url");
+                event.setImageUrl(imageUrl);
+            } catch (IOException e) {
+                throw new IOException("Failed to upload image: " + e.getMessage());
+            }
         }
         return eventRepository.save(event);
     }
@@ -53,11 +58,14 @@ public class EventServiceIMPL implements IEventService {
     @Override
     public Event getEventById(String id) {
         return eventRepository.findByIdEvent(id)
-                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + id));
     }
 
     @Override
     public void deleteEvent(String id) {
+        if (!eventRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Event not found with id: " + id);
+        }
         eventRepository.deleteById(id);
     }
 
@@ -88,6 +96,9 @@ public class EventServiceIMPL implements IEventService {
         if (eventDetails.getEndTime() != null) {
             existingEvent.setEndTime(eventDetails.getEndTime());
         }
+        if (eventDetails.getCapacity() != null) {
+            existingEvent.setCapacity(eventDetails.getCapacity());
+        }
 
         return eventRepository.save(existingEvent);
     }
@@ -105,6 +116,7 @@ public class EventServiceIMPL implements IEventService {
         if (eventDetails.getEndDate() != null) existingEvent.setEndDate(eventDetails.getEndDate());
         if (eventDetails.getStartTime() != null) existingEvent.setStartTime(eventDetails.getStartTime());
         if (eventDetails.getEndTime() != null) existingEvent.setEndTime(eventDetails.getEndTime());
+        if (eventDetails.getCapacity() != null) existingEvent.setCapacity(eventDetails.getCapacity());
 
         // Handle image update
         if (imageFile != null && !imageFile.isEmpty()) {

@@ -53,7 +53,7 @@ public class Event {
     @DBRef(lazy = true)
     private List<Reclamation> reclamations;
 
-    private Integer capacity; 
+    private Integer capacity = 0; // Set default value
     private String imageUrl;
 
     public LocalDateTime getStartDateTime() {
@@ -172,11 +172,11 @@ public class Event {
     }
 
     public Integer getCapacity() {
-        return capacity;
+        return capacity != null ? capacity : 0; // Ensure we never return null
     }
 
     public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
+        this.capacity = capacity != null ? capacity : 0; // Ensure we never store null
     }
 
     public String getImageUrl() {

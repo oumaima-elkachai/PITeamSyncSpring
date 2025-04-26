@@ -2,6 +2,7 @@ package com.example.events.controllers;
 
 import com.example.events.entity.Event;
 import com.example.events.services.interfaces.IEventService;
+import com.example.events.exception.ResourceNotFoundException;  // Add this import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -27,26 +28,50 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<List<Event>> getAllEvents() {
-        List<Event> events = eventService.getAllEvents();
-        return ResponseEntity.ok(events);
+        try {
+            List<Event> events = eventService.getAllEvents();
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Event> addEvent(
             @RequestPart("event") Event event,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
-        Event savedEvent = eventService.addEvent(event, imageFile);
-        return ResponseEntity.ok(savedEvent);
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
+        try {
+            Event savedEvent = eventService.addEvent(event, imageFile);
+            return ResponseEntity.ok(savedEvent);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEventById(@PathVariable String id) {
-        return ResponseEntity.ok(eventService.getEventById(id));
+        try {
+            Event event = eventService.getEventById(id);
+            return ResponseEntity.ok(event);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteEvent(@PathVariable String id) {
-        eventService.deleteEvent(id);
+    public ResponseEntity<Void> deleteEvent(@PathVariable String id) {
+        try {
+            eventService.deleteEvent(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -99,6 +124,5 @@ public class EventController {
         List<Event> events = eventService.getEventsByDate(today);
         return ResponseEntity.ok(events);
     }
-
 
 }

@@ -27,8 +27,17 @@ public class AttachmentController {
             @RequestParam("taskId") String taskId,
             @RequestParam("userId") String userId) throws IOException {
 
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Attachment attachment = attachmentService.storeFile(file, taskId, userId);
         return new ResponseEntity<>(attachment, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/download/{id}")
+    public ResponseEntity<?> downloadFile(@PathVariable String id) {
+        return attachmentService.downloadFile(id);
     }
 
     @GetMapping("/task/{taskId}")
@@ -44,10 +53,7 @@ public class AttachmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/download/{id}")
-    public ResponseEntity<byte[]> downloadFile(@PathVariable String id) {
-        return attachmentService.downloadFile(id);
-    }
+
 
     // AttachmentController.java
 

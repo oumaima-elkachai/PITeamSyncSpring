@@ -16,6 +16,7 @@ public class Attachment {
     private String fileType;
     private long fileSize;
     private LocalDateTime uploadedAt;
-    private String uploadedBy; // employee ID
-    private String gridFsId;
+    private String uploadedBy;
+    private String cloudinaryUrl;  // Replaces gridFsId
+    private String publicId;       // For cloudinary management
 }

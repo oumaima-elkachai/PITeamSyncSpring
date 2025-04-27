@@ -10,7 +10,7 @@ import java.util.List;
 public interface AttachmentService {
     Attachment storeFile(MultipartFile file, String taskId, String userId) throws IOException;
     List<Attachment> getAttachmentsByTask(String taskId);
-    ResponseEntity<byte[]> downloadFile(String id);
+    ResponseEntity<Object> downloadFile(String id);
     // AttachmentService.java
     void deleteAttachment(String id);
 }

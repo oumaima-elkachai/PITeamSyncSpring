@@ -1,34 +1,25 @@
 // AttachmentServiceImpl.java
 package tn.esprit.spring.teamsync.Services.MPL;
 
-import com.mongodb.client.gridfs.model.GridFSFile;
-import org.bson.types.ObjectId;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.spring.teamsync.Entity.Attachment;
-import tn.esprit.spring.teamsync.Event.AttachmentAddedEvent;
 import tn.esprit.spring.teamsync.Repository.AttachmentRepository;
 import tn.esprit.spring.teamsync.Services.Interfaces.AttachmentService;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.IOUtils;
-import tn.esprit.spring.teamsync.Entity.Task;
-import tn.esprit.spring.teamsync.Repository.TaskRepository;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+import tn.esprit.spring.teamsync.Repository.TaskRepository;
 
 
 @Service
@@ -41,70 +32,65 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     private final EmailService emailService;
     private final TaskRepository taskRepository; // Add this dependency
-
-
-
-    @Override
-    public void deleteAttachment(String id) {
-        attachmentRepository.findById(id).ifPresent(attachment -> {
-            // Delete from GridFS
-            gridFsTemplate.delete(new Query(Criteria.where("_id").is(new ObjectId(attachment.getGridFsId()))));
-            // Delete metadata
-            attachmentRepository.deleteById(id);
-        });
-    }
-
-
-    @Override
-    public Attachment storeFile(MultipartFile file, String taskId, String userId) throws IOException {
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-        ObjectId gridFsId = gridFsTemplate.store(file.getInputStream(), fileName, file.getContentType());
-
-        Attachment attachment = new Attachment();
-        attachment.setGridFsId(gridFsId.toString());
-        attachment.setTaskId(taskId);
-        attachment.setFileName(fileName);
-        attachment.setFileType(file.getContentType());
-        attachment.setFileSize(file.getSize());
-        attachment.setUploadedAt(LocalDateTime.now());
-        attachment.setUploadedBy(userId);
-
-        Attachment savedAttachment = attachmentRepository.save(attachment);
-        eventPublisher.publishEvent(new AttachmentAddedEvent(this, taskId, savedAttachment.getId(), userId));
-
-        return savedAttachment;
-    }
-
+    private final Cloudinary cloudinary;
     @Override
     public List<Attachment> getAttachmentsByTask(String taskId) {
         return attachmentRepository.findByTaskId(taskId);
     }
 
     @Override
-    public ResponseEntity<byte[]> downloadFile(String id) {
+    public Attachment storeFile(MultipartFile file, String taskId, String userId) throws IOException {
+        Map<String, Object> uploadResult = cloudinary.uploader()
+                .upload(file.getBytes(),
+                        ObjectUtils.asMap(
+                                "resource_type", "auto",
+                                "folder", "task_attachments"
+                        ));
+
+        Attachment attachment = new Attachment();
+        attachment.setTaskId(taskId);
+        attachment.setFileName(file.getOriginalFilename());
+        attachment.setFileType(file.getContentType());
+        attachment.setFileSize(file.getSize());
+        attachment.setUploadedAt(LocalDateTime.now());
+        attachment.setUploadedBy(userId);
+        attachment.setCloudinaryUrl(uploadResult.get("secure_url").toString());
+        attachment.setPublicId(uploadResult.get("public_id").toString());
+
+        return attachmentRepository.save(attachment);
+    }
+
+    @Override
+    public ResponseEntity<Object> downloadFile(String id) {
         return attachmentRepository.findById(id)
                 .map(attachment -> {
                     try {
-                        Query query = new Query(Criteria.where("_id").is(attachment.getGridFsId()));
-                        GridFSFile file = gridFsTemplate.findOne(query);
+                        // Get file URL from Cloudinary
+                        String downloadUrl = cloudinary.url()
+                                .generate(attachment.getPublicId());
 
-                        if (file == null) {
-                            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new byte[0]);
-                        }
-
-                        GridFsResource resource = gridFsTemplate.getResource(file);
-                        byte[] data = IOUtils.toByteArray(resource.getInputStream());
-
-                        return ResponseEntity.ok()
-                                .header(HttpHeaders.CONTENT_DISPOSITION,
-                                        "attachment; filename=\"" + attachment.getFileName() + "\"")
-                                .contentType(MediaType.parseMediaType(attachment.getFileType()))
-                                .body(data);
-
-                    } catch (IOException e) {
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new byte[0]);
+                        return ResponseEntity.status(HttpStatus.FOUND)
+                                .header(HttpHeaders.LOCATION, downloadUrl)
+                                .build();
+                    } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                     }
                 })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new byte[0]));
+                .orElse(ResponseEntity.notFound().build());
     }
+
+    @Override
+    public void deleteAttachment(String id) {
+        attachmentRepository.findById(id).ifPresent(attachment -> {
+            try {
+                // Delete from Cloudinary
+                cloudinary.uploader().destroy(attachment.getPublicId(), ObjectUtils.emptyMap());
+                // Delete metadata
+                attachmentRepository.deleteById(id);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to delete file from Cloudinary", e);
+            }
+        });
+    }
+
 }

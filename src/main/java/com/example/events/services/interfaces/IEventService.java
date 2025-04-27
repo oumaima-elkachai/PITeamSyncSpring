@@ -2,6 +2,7 @@ package com.example.events.services.interfaces;
 
 import com.example.events.entity.Event;
 import com.example.events.entity.Participation;
+import com.example.events.entity.TypeEvent;
 import com.example.events.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +24,6 @@ public interface IEventService {
     void removeParticipantFromEvent(String eventId, String participantId);
     List<Event> getEventsByStartDate(LocalDate startDate);
     List<Event> getEventsByDateRange(LocalDate startDate, LocalDate endDate);
-
     List<Event> getEventsByDate(LocalDate today);
+    List<Event> getEventsByType(TypeEvent eventType);
 }

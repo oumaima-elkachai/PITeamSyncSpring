@@ -3,6 +3,7 @@ package com.example.events.services.IMPL;
 import com.example.events.entity.Event;
 import com.example.events.entity.Participation;
 import com.example.events.entity.ParticipationStatus;
+import com.example.events.entity.TypeEvent;
 import com.example.events.repository.eventRepository;
 import com.example.events.repository.ParticipationRepository;
 import com.example.events.services.interfaces.IEventService;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 
 @Service
 public class EventServiceIMPL implements IEventService {
@@ -107,11 +109,14 @@ public class EventServiceIMPL implements IEventService {
         if (eventDetails.getCapacity() != null) {
             existingEvent.setCapacity(eventDetails.getCapacity());
         }
+        if (eventDetails.getEventType() != null) {
+            existingEvent.setEventType(eventDetails.getEventType());
+        }
 
         return eventRepository.save(existingEvent);
     }
 
-    @Override
+    @Override 
     public Event updateEvent(String id, Event eventDetails, MultipartFile imageFile) throws IOException {
         Event existingEvent = getEventById(id);
         validateEventDates(eventDetails);
@@ -125,6 +130,7 @@ public class EventServiceIMPL implements IEventService {
         if (eventDetails.getStartTime() != null) existingEvent.setStartTime(eventDetails.getStartTime());
         if (eventDetails.getEndTime() != null) existingEvent.setEndTime(eventDetails.getEndTime());
         if (eventDetails.getCapacity() != null) existingEvent.setCapacity(eventDetails.getCapacity());
+        if (eventDetails.getEventType() != null) existingEvent.setEventType(eventDetails.getEventType());
 
         // Handle image update
         if (imageFile != null && !imageFile.isEmpty()) {
@@ -210,6 +216,11 @@ public class EventServiceIMPL implements IEventService {
 
     public List<Event> getEventsByDate(LocalDate date) {
         return eventRepository.findByStartDate(date);
+    }
+
+    @Override
+    public List<Event> getEventsByType(TypeEvent eventType) {
+        return eventRepository.findByEventType(eventType);
     }
 
 }

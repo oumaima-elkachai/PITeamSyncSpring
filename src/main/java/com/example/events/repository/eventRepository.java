@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.repository.Query;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import com.example.events.entity.TypeEvent;
 
 @Repository
 public interface eventRepository extends MongoRepository<Event, String> {
@@ -19,4 +20,6 @@ public interface eventRepository extends MongoRepository<Event, String> {
     Optional<Event> findById(String id);
 
     Optional<Event> findByIdEvent(String idEvent);
+
+    List<Event> findByEventType(TypeEvent eventType);
 }

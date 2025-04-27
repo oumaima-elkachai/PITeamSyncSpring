@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import com.example.events.entity.TypeEvent;
+
 
 @RestController
 @RequestMapping("/api/events")
@@ -159,6 +161,16 @@ public class EventController {
         LocalDate today = LocalDate.now();
         List<Event> events = eventService.getEventsByDate(today);
         return ResponseEntity.ok(events);
+    }
+
+    @GetMapping("/by-type/{eventType}")
+    public ResponseEntity<List<Event>> getEventsByType(@PathVariable TypeEvent eventType) {
+        try {
+            List<Event> events = eventService.getEventsByType(eventType);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 }

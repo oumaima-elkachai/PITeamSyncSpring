@@ -56,6 +56,8 @@ public class Event {
     private Integer capacity = 0; // Set default value
     private String imageUrl;
 
+    private TypeEvent eventType;
+
     public LocalDateTime getStartDateTime() {
         return startDate.atTime(startTime != null ? startTime : LocalTime.MIN);
     }
@@ -185,5 +187,13 @@ public class Event {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public TypeEvent getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(TypeEvent eventType) {
+        this.eventType = eventType;
     }
 }

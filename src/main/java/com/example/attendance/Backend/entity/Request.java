@@ -2,6 +2,7 @@ package com.example.attendance.Backend.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -32,7 +33,10 @@ public class Request {
     private RequestStatus status;  // Enum : PENDING, APPROVED, REJECTED
 
     private String justification;
+    private String attachmentUrl; // Pour stocker l'URL de Cloudinary
+
     @DBRef
+    @JsonIgnore
     private Employee employee;
 
 

@@ -28,6 +28,8 @@ public class Employee {
     private String role;
     private String phone;
 
+    private String faceImage; // Base64 de l’image
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date hireDate;
 

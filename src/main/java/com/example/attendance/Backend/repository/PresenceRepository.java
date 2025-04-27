@@ -14,6 +14,7 @@ public interface PresenceRepository extends MongoRepository<Presence, String> {
     Optional<Presence> findByEmployeeIdAndDate(String employeeId, LocalDate date);
 
 
+
     List<Presence> findByEmployeeIdAndDateBetween(String employeeId, LocalDate start, LocalDate end);
 
     List<Presence> findByEmployeeId(String employeeId);

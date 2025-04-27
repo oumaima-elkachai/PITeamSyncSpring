@@ -3,6 +3,7 @@ package com.example.attendance.Backend.controllers;
 import com.example.attendance.Backend.entity.Request;
 import com.example.attendance.Backend.entity.RequestStatus;
 import com.example.attendance.Backend.repository.RequestRepository;
+import com.example.attendance.Backend.services.IMPL.CloudinaryServiceIMPL;
 import com.example.attendance.Backend.services.interfaces.RequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -21,14 +25,40 @@ public class RequestController {
     private final RequestRepository requestRepository;
     private final RequestService requestService;
 
-    @PostMapping("/create")
-    public Request createRequest(@RequestBody Request request) {
+    private final CloudinaryServiceIMPL cloudinaryService;
+
+// Ajoute CloudinaryService dans le constructeur (grâce à @RequiredArgsConstructor)
+
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createRequest(
+            @RequestPart("type") String type,
+            @RequestPart("employeeId") String employeeId,
+            @RequestPart("startDate") String startDateStr, // recevoir en String
+            @RequestPart("endDate") String endDateStr,
+            @RequestPart("justification") String justification,
+            @RequestPart(value = "attachment", required = false) MultipartFile attachment
+    ) {
+        Request request = new Request();
+        request.setType(type);
+        request.setEmployeeId(employeeId.trim());
+
+        // Conversion String -> LocalDate
+        request.setStartDate(LocalDate.parse(startDateStr));
+        request.setEndDate(LocalDate.parse(endDateStr));
+
+        request.setJustification(justification);
         request.setStatus(RequestStatus.PENDING);
-        if (request.getEmployeeId() != null) {
-            request.setEmployeeId(request.getEmployeeId().trim());
+
+        if (attachment != null && !attachment.isEmpty()) {
+            String uploadedUrl = cloudinaryService.uploadFile(attachment);
+            request.setAttachmentUrl(uploadedUrl);
         }
-        return requestRepository.save(request);
+
+        Request savedRequest = requestRepository.save(request);
+        return ResponseEntity.ok(savedRequest);
     }
+
+
 
     @GetMapping("/all")
     public List<Request> getAllRequests() {

@@ -23,6 +23,11 @@ public class Project {
     private LocalDate dueDate;
     private String status; // Active, On Hold, Completed
     private String type;   // Engineering, Design, etc.
+    private String department; // Add this field
+
+    public enum Department {
+        ENGINEERING, MARKETING, SALES, HR, FINANCE, OPERATIONS
+    }
 
     // Relationships (IDs only)
     private List<String> taskIds = new ArrayList<>();      // Task IDs

@@ -9,4 +9,6 @@ public interface ProjectService {
     void deleteProject(String id);
     Project getProjectById(String id);
     List<Project> getAllProjects();
+    List<Project> getProjectsByDepartment(String department);
+
 }

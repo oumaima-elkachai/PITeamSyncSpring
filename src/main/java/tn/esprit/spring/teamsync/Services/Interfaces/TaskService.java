@@ -13,11 +13,14 @@ public interface TaskService {
     Task save(Task task);
 
     Optional<Task> findById(String id);
+    Task approveExtension(String taskId);
 
     Task addLink(String taskId, Map<String, String> link);
     Task removeLink(String taskId, int linkIndex);
 
     Task createTask(Task task);
+    List<Task> getTasksBySkill(String skill);
+
 
     List<Task> getTasksByProject(String projectId);
 

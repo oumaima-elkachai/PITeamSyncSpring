@@ -21,6 +21,9 @@ public class ProjectController {
     // Create
     @PostMapping
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
+        if (project.getDepartment() == null || project.getDepartment().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         Project savedProject = projectService.createProject(project);
         return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
     }
@@ -58,4 +61,12 @@ public class ProjectController {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/by-department")
+    public ResponseEntity<List<Project>> getProjectsByDepartment(
+            @RequestParam String department
+    ) {
+        return ResponseEntity.ok(projectService.getProjectsByDepartment(department));
+    }
+
 }

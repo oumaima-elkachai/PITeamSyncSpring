@@ -3,6 +3,7 @@ package tn.esprit.spring.teamsync.Services.MPL;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.spring.teamsync.Entity.Attachment;
+import tn.esprit.spring.teamsync.Event.AttachmentAddedEvent;
 import tn.esprit.spring.teamsync.Repository.AttachmentRepository;
 import tn.esprit.spring.teamsync.Services.Interfaces.AttachmentService;
 import java.io.IOException;
@@ -23,6 +25,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
+import tn.esprit.spring.teamsync.Entity.Task;
+import tn.esprit.spring.teamsync.Repository.TaskRepository;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 
 
@@ -30,7 +35,13 @@ import org.apache.commons.io.IOUtils;
 @RequiredArgsConstructor
 public class AttachmentServiceImpl implements AttachmentService {
 
+    private final GridFsTemplate gridFsTemplate;
     private final AttachmentRepository attachmentRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    private final EmailService emailService;
+    private final TaskRepository taskRepository; // Add this dependency
+
 
 
     @Override
@@ -47,15 +58,8 @@ public class AttachmentServiceImpl implements AttachmentService {
     @Override
     public Attachment storeFile(MultipartFile file, String taskId, String userId) throws IOException {
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        ObjectId gridFsId = gridFsTemplate.store(file.getInputStream(), fileName, file.getContentType());
 
-        // Store file in GridFS
-        ObjectId gridFsId = gridFsTemplate.store(
-                file.getInputStream(),
-                fileName,
-                file.getContentType()
-        );
-
-        // Create and save attachment metadata
         Attachment attachment = new Attachment();
         attachment.setGridFsId(gridFsId.toString());
         attachment.setTaskId(taskId);
@@ -65,14 +69,16 @@ public class AttachmentServiceImpl implements AttachmentService {
         attachment.setUploadedAt(LocalDateTime.now());
         attachment.setUploadedBy(userId);
 
-        return attachmentRepository.save(attachment);
+        Attachment savedAttachment = attachmentRepository.save(attachment);
+        eventPublisher.publishEvent(new AttachmentAddedEvent(this, taskId, savedAttachment.getId(), userId));
+
+        return savedAttachment;
     }
 
     @Override
     public List<Attachment> getAttachmentsByTask(String taskId) {
         return attachmentRepository.findByTaskId(taskId);
     }
-    private final GridFsTemplate gridFsTemplate;
 
     @Override
     public ResponseEntity<byte[]> downloadFile(String id) {

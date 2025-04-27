@@ -23,5 +23,6 @@ public class Employee {
     private String department;
     private List<String> assignedTaskIds;
     private List<String> projectIds;
+    private String role = "USER";
     private List<String> skills = new ArrayList<>();
 }

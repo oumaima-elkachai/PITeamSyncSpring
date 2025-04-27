@@ -28,8 +28,10 @@ public class Task {
     private Priority priority;
     private Status status;
 
-    private List<String> requiredSkills = new ArrayList<>();
-
+    private List<String> requiredSkills = new ArrayList<>(); // Ensure this exists
+    public enum Skill {
+        FRONTEND, BACKEND, DESIGN, MARKETING, ANALYSIS, TESTING
+    }
     @Field
     private LocalDate requestedExtensionDate;
 

@@ -8,4 +8,5 @@ public interface ProjectRepository extends MongoRepository<Project, String> {
     // Basic CRUD provided by MongoRepository
     List<Project> findByStatus(String status);
     List<Project> findByType(String type);
+    List<Project> findByDepartment(String department);
 }

@@ -22,7 +22,7 @@ import com.teamsync.recruitment.service.interfaces.NotificationService;
 import io.github.classgraph.Resource;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
-import org.apache.http.HttpEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.*;
@@ -35,8 +35,20 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import org.springframework.http.HttpEntity;
+
+
+
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -110,10 +122,26 @@ public ResponseEntity<Application> updateApplicationStatus(@PathVariable String 
 }
 
 
+    @GetMapping("/quiz/{jobId}")
+    public ResponseEntity<String> getQuizForJob(@PathVariable String jobId) {
+        String flaskUrl = "http://localhost:5000/generate-quiz?jobId=" + jobId;
 
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(flaskUrl, String.class);
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de la récupération du quiz");
+        }
+    }
 
-
-
+  /*  @PutMapping("/{id}/quiz-score")
+    public ResponseEntity<Application> updateQuizScore(@PathVariable String id, @RequestParam int score) {
+        Application application = applicationService.getApplicationById(id);
+        application.setQuizScore(score);  // Mise à jour du score du quiz
+        applicationService.save(application);  // Enregistrement dans la base de données
+        return ResponseEntity.ok(application);
+    }*/
 
 
     /// ////////////////////////
@@ -165,7 +193,7 @@ public ResponseEntity<Application> updateApplicationStatus(@PathVariable String 
         application.setStatus("PENDING");
         application.setExperience(application.getExperience());
         application.setCandidateId(candidateId);
-
+        application.setQuizScore(application.getQuizScore());//quizz score
         Application savedApplication = applicationService.createApplication(application, jobId);
 
         try {
@@ -232,4 +260,77 @@ public ResponseEntity<Application> updateApplicationStatus(@PathVariable String 
     }
 
 
+    @PostMapping("/quiz/submit")
+    public ResponseEntity<Integer> submitQuiz(@RequestBody Map<String, String> quizResponses) {
+        String flaskUrl = "http://localhost:5000/evaluate-quiz";  // URL de votre microservice Flask
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(quizResponses, headers);
+
+            ResponseEntity<Integer> response = restTemplate.exchange(
+                    flaskUrl, HttpMethod.POST, entity, Integer.class
+            );
+            return ResponseEntity.ok(response.getBody());  // Score retourné par Flask
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+    // Injecter le repository
+    @PostMapping("/generate-quiz/{jobId}")
+    public ResponseEntity<String> generateQuiz(@PathVariable String jobId) {
+        String jobDescription = getJobDescription(jobId);
+
+        if (jobDescription == null || jobDescription.isEmpty()) {
+            return ResponseEntity.status(400).body("Job description not found.");
+        }
+
+        String flaskUrl = "http://localhost:8089/generate-quiz";
+
+        try {
+            // Préparer le JSON
+            Map<String, String> payload = new HashMap<>();
+            payload.put("jobId", jobId);
+            payload.put("jobDescription", jobDescription);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(payload, headers);
+
+            String response = restTemplate.postForObject(flaskUrl, request, String.class);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error generating quiz: " + e.getMessage());
+        }
+    }
+
+    private String getJobDescription(String jobId) {
+        return jobPostingRepository.findById(jobId)
+                .map(JobPosting::getDescription)
+                .orElse(null);
+    }
+
+
+    /*@PutMapping("/{id}/quiz-score")
+    public ResponseEntity<Application> updateQuizScore(@PathVariable String id, @RequestParam int score) {
+        Application application = applicationService.getApplicationById(id);
+        application.setQuizScore(score);  // Mise à jour du score du quiz
+        applicationService.save(application);  // Enregistrement dans la base de données
+        return ResponseEntity.ok(application);
+    }*/
+
+
+
 }
+
+
+
+
+
+
+
+

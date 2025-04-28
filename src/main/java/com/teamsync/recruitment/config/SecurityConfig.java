@@ -22,7 +22,8 @@ public class SecurityConfig {
                         .anyRequest().permitAll() // Autoriser tout sans authentification
                 );
         // Ajout explicite du CorsFilter
-        http.cors();
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
         return http.build();
     }
 
@@ -34,7 +35,7 @@ public class SecurityConfig {
         config.addAllowedMethod("*"); // Autoriser toutes les méthodes HTTP (GET, POST, PUT, DELETE)
         config.addAllowedHeader("*"); // Autoriser tous les en-têtes
         config.setAllowCredentials(true); // Autoriser les cookies et credentials
-        source.registerCorsConfiguration("/api/**", config); // Appliquer la config CORS sur les routes `/api/**`
+        source.registerCorsConfiguration("/**", config); // Appliquer la config CORS sur les routes `/api/**`
         return source;
     }
 
@@ -43,7 +44,7 @@ public class SecurityConfig {
     public static class WebConfig implements WebMvcConfigurer {
         @Override
         public void addCorsMappings(CorsRegistry registry) {
-            registry.addMapping("/api/**")
+            registry.addMapping("/**")
                     .allowedOrigins("http://localhost:4200")
                     .allowedMethods("GET", "POST", "PUT", "DELETE")
                     .allowedHeaders("*")

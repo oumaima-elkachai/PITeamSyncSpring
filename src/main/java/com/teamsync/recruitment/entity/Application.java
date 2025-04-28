@@ -25,6 +25,7 @@ public class Application {
     private String candidateEmail;
     private String cvUrl;         // URL du CV (stockage cloud ou fichier base64)
     private String status;
+    private int quizScore;
     @Transient
     private Double score; // Score de matching CV
 

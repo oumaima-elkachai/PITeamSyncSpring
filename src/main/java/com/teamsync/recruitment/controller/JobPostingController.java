@@ -179,4 +179,16 @@ public class JobPostingController {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to upload image"));
         }
     }
+
+
+    /// //////////quiz
+
+    @GetMapping("/{id}/description")
+    public ResponseEntity<String> getJobDescription(@PathVariable String id) {
+        Optional<JobPosting> jobOpt = jobPostingRepository.findById(id);
+        return jobOpt.map(job -> ResponseEntity.ok(job.getDescription()))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
 }

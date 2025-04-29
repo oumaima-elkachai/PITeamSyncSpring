@@ -1,5 +1,6 @@
 package com.teamsync.userpi.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -7,9 +8,13 @@ import org.springframework.context.support.BeanDefinitionDsl;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -38,6 +43,20 @@ import java.util.List;
     private String telephone;  // e.g., "+1-234-567-890"
     private String photoUrl;
     private String resetToken;
+    @Field
+    private String linkedIn;
+    @Field
+    private String github;
+    @Field
+    private String portfolio;
+    @Field
+    private String job;
+
+    @Field
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private Date  hireDate;
+
+    @Builder.Default
     private List<ChatMessage> chatHistory = new ArrayList<>();
 
 

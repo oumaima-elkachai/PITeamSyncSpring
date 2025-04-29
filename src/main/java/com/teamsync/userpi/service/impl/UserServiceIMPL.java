@@ -252,11 +252,13 @@ public class UserServiceIMPL implements UserService {
         userRepository.save(user);
     }
 
+
     @Override
-    public void saveChatMessage(String userId, ChatMessage chatMessage) {
-        chatMessage.setUserId(userId);
-        chatMessageRepository.save(chatMessage);
+    public void saveChatMessage(ChatMessage message) {
+        chatMessageRepository.save(message);
     }
+
+
 
     @Override
     public List<ChatMessage> getChatHistory(String userId) {

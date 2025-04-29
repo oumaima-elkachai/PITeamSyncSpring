@@ -8,15 +8,18 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "chat")
 public class ChatMessage {
     @Id
     private String id;
-
-    private String userId; // Reference to the user
-    private String sender; // "user" or "bot"
+    private String userId;
+    private String conversationId;
+    private String sender;
     private String message;
     private LocalDateTime timestamp;
+    private String title;
+
 }

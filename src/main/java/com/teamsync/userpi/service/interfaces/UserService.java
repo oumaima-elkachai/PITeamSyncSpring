@@ -18,6 +18,6 @@ public interface UserService {
     void initiatePasswordReset(String email) throws UserCollectionException;
 
     void resetPassword(String token, String newPassword) throws UserCollectionException;
-    public void saveChatMessage(String userId, ChatMessage message);
+    void saveChatMessage(ChatMessage message);
     public List<ChatMessage> getChatHistory(String userId);
 }

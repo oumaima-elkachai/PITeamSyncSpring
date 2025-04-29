@@ -1,11 +1,14 @@
 package com.teamsync.userpi.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamsync.userpi.DTO.LoginRequest;
 import com.teamsync.userpi.entity.ChatMessage;
 import com.teamsync.userpi.entity.RolesUser;
 import com.teamsync.userpi.entity.User;
 import com.teamsync.userpi.exception.UserCollectionException;
+import com.teamsync.userpi.repository.ChatMessageRepository;
 import com.teamsync.userpi.repository.UserRepository;
+import com.teamsync.userpi.service.CloudinaryService;
 import com.teamsync.userpi.service.EmailService;
 import com.teamsync.userpi.service.FileStorageService;
 import com.teamsync.userpi.service.interfaces.UserService;
@@ -45,6 +48,9 @@ public class UserController {
 
 
     private final EmailService emailService;
+    private final CloudinaryService cloudinaryService;
+
+    private final ChatMessageRepository chatMessageRepository;
 
 
 
@@ -56,64 +62,119 @@ public class UserController {
     private final ChatClient chatClient;
 
     @PostMapping("/chat")
-    public Map<String, String> ask(@RequestBody Map<String, String> payload, Principal principal) {
+    public Map<String, String> ask(@RequestBody Map<String, String> payload, HttpSession session) {
         String question = payload.get("question");
-        String userEmail = principal.getName();
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+        String conversationId = payload.get("conversationId");
+
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not logged in");
+        }
 
         String response = chatClient.prompt().user(question).call().content();
 
-        ChatMessage userMessage = new ChatMessage(null, user.getId(), "user", question, LocalDateTime.now());
-        ChatMessage botMessage = new ChatMessage(null, user.getId(), "bot", response, LocalDateTime.now());
+        ChatMessage userMessage = ChatMessage.builder()
+                .userId(user.getId())
+                .conversationId(conversationId)
+                .sender("user")
+                .message(question)
+                .timestamp(LocalDateTime.now())
+                .build();
 
-        userService.saveChatMessage(user.getId(), userMessage);
-        userService.saveChatMessage(user.getId(), botMessage);
+        // ✅ Set the title if this is the first message in this conversation
+        boolean isFirstMessage = chatMessageRepository.findByConversationIdOrderByTimestampAsc(conversationId).isEmpty();
+        if (isFirstMessage) {
+            String trimmed = question.trim();
+            userMessage.setTitle(trimmed.length() > 40 ? trimmed.substring(0, 40) + "..." : trimmed);
+        }
+
+        ChatMessage botMessage = ChatMessage.builder()
+                .userId(user.getId())
+                .conversationId(conversationId)
+                .sender("bot")
+                .message(response)
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        userService.saveChatMessage(userMessage);
+        userService.saveChatMessage(botMessage);
 
         return Map.of("answer", response);
     }
 
+    @GetMapping("/session-check")
+    public ResponseEntity<?> sessionCheck(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        Map<String, Object> response = new HashMap<>();
+        response.put("loggedIn", user != null);
+        if (user != null) {
+            response.put("user", user);
+        }
+        return ResponseEntity.ok(response);
+    }
+
+
     @GetMapping("/chat/history")
-    public List<ChatMessage> getChatHistory(Principal principal) {
-        String userEmail = principal.getName();
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+    public List<ChatMessage> getChatHistory(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not logged in");
+        }
         return userService.getChatHistory(user.getId());
+    }
+
+    @GetMapping("/chat/conversations")
+    public List<String> getConversationIds(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        List<ChatMessage> all = chatMessageRepository.findAllConversationIdsByUserId(user.getId());
+
+        return all.stream()
+                .map(ChatMessage::getConversationId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+
+    @GetMapping("/chat/history/{conversationId}")
+    public List<ChatMessage> getChatByConversation(@PathVariable String conversationId) {
+        return chatMessageRepository.findByConversationIdOrderByTimestampAsc(conversationId);
     }
 
 
 
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
 
-    @PostMapping(value = "/signup", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+
+    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> createUser(
-            @RequestPart("name") String name,
-            @RequestPart("email") String email,
-            @RequestPart("password") String password,
-            @RequestPart("role") String role,
-            @RequestPart(value = "telephone", required = false) String telephone,
+            @RequestPart("user") String userJson,
             @RequestPart(value = "photo", required = false) MultipartFile photo
     ) {
         try {
-            User user = new User();
-            user.setName(name);
-            user.setEmail(email);
-            user.setPassword(password);
-            user.setRole(RolesUser.valueOf(role));
-            user.setTelephone(telephone);
+            ObjectMapper objectMapper = new ObjectMapper();
+            User user = objectMapper.readValue(userJson, User.class);
+
             if (photo != null && !photo.isEmpty()) {
-                String photoUrl = fileStorageService.savePhoto(photo);
+                String photoUrl = cloudinaryService.uploadImage(photo);
                 user.setPhotoUrl(photoUrl);
             }
+
             User createdUser = userService.createUser(user);
             Map<String, Object> response = Map.of(
                     "status", "success",
                     "message", "User created successfully",
-                    "user", createdUser  // Return full user object instead of just userId
+                    "user", createdUser
             );
             return ResponseEntity.created(URI.create("/api/users/" + createdUser.getId())).body(response);
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(Map.of("status", "error", "message", e.getReason()));
-        } catch (UserCollectionException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", e.getMessage()));
         }
     }
 
@@ -126,49 +187,36 @@ public class UserController {
         }
     }
 
-    @PutMapping(value = "/update/{id}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateById(
             @PathVariable("id") String id,
-            @RequestPart("name") String name,
-            @RequestPart("email") String email,
-            @RequestPart("password") String password,
-            @RequestPart("role") String role,
-            @RequestPart(value = "telephone", required = false) String telephone,
+            @RequestPart("user") String userJson,
             @RequestPart(value = "photo", required = false) MultipartFile photo
     ) {
         try {
-            System.out.println("Received telephone: " + telephone);
-            if (photo != null && !photo.isEmpty()) {
-                System.out.println("Received photo: " + photo.getOriginalFilename());
-            } else {
-                System.out.println("No new photo provided.");
-            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            User updatedData = objectMapper.readValue(userJson, User.class);
+            User existingUser = userService.getSingleUser(id);
 
-            User user = userService.getSingleUser(id);
-            user.setName(name);
-            user.setEmail(email);
-            user.setPassword(password);
-            user.setRole(RolesUser.valueOf(role.trim()));
-            user.setTelephone(telephone);
+            existingUser.setName(updatedData.getName());
+            existingUser.setEmail(updatedData.getEmail());
+            existingUser.setPassword(updatedData.getPassword());
+            existingUser.setRole(updatedData.getRole());
+            existingUser.setTelephone(updatedData.getTelephone());
 
             if (photo != null && !photo.isEmpty()) {
-                String photoUrl = fileStorageService.savePhoto(photo);
-                user.setPhotoUrl(photoUrl);
-                System.out.println("New photo URL: " + photoUrl);
+                String photoUrl = cloudinaryService.uploadImage(photo);
+                existingUser.setPhotoUrl(photoUrl);
             }
 
-            userService.updateUser(id, user);
+            userService.updateUser(id, existingUser);
             User updatedUser = userService.getSingleUser(id);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "User updated with id " + id);
-            response.put("user", updatedUser);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("message", "User updated", "user", updatedUser));
+
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
-
 
 
 

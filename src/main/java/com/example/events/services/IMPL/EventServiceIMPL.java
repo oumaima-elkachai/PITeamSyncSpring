@@ -183,6 +183,10 @@ public class EventServiceIMPL implements IEventService {
         // Save participation
         Participation savedParticipation = participationRepository.save(participation);
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         // Update event's participant list
         if (event.getParticipantId() == null) {
             event.setParticipantId(new ArrayList<>());

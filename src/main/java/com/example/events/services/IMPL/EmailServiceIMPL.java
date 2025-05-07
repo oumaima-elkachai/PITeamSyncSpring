@@ -2,10 +2,20 @@ package com.example.events.services.IMPL;
 
 import com.example.events.services.interfaces.IEmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+<<<<<<< Updated upstream
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+=======
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
+>>>>>>> Stashed changes
 @Service
 public class EmailServiceIMPL implements IEmailService {
     
@@ -14,6 +24,7 @@ public class EmailServiceIMPL implements IEmailService {
     
     @Override
     public void sendParticipationConfirmationEmail(String toEmail, String participantName, String eventName) {
+<<<<<<< Updated upstream
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("your-email@gmail.com");
         message.setTo(toEmail);
@@ -24,5 +35,34 @@ public class EmailServiceIMPL implements IEmailService {
                 + "Best regards,\nPITeamSync Team");
         
         mailSender.send(message);
+=======
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            
+            helper.setFrom("rania.gasmi@esprit.tn");
+            helper.setTo(toEmail);
+            helper.setSubject("Participation Confirmation - " + eventName);
+            
+            String htmlContent = String.format("""
+                <html>
+                <body>
+                    <h2>Participation Confirmation</h2>
+                    <p>Dear %s,</p>
+                    <p>Your participation in <strong>%s</strong> has been confirmed.</p>
+                    <p>Thank you for joining!</p>
+                    <br>
+                    <p>Best regards,<br>PITeamSync Team</p>
+                </body>
+                </html>
+                """, participantName, eventName);
+            
+            helper.setText(htmlContent, true);
+            
+            mailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
+>>>>>>> Stashed changes
     }
 }

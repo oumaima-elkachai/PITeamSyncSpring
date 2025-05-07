@@ -13,6 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+<<<<<<< Updated upstream
+=======
+import java.util.Map;
+>>>>>>> Stashed changes
 
 @RestController
 @RequestMapping("/api/participations")
@@ -127,6 +131,7 @@ public class ParticipationController {
 
     @PutMapping("/confirm/{id}")
     public ResponseEntity<?> confirmParticipation(@PathVariable String id) {
+<<<<<<< Updated upstream
         Participation participation = participationService.confirmParticipation(id);
         
         // Get participant email and name
@@ -147,3 +152,90 @@ public class ParticipationController {
 }
 
 // Removed StatusUpdateRequest class to place it in its own file
+=======
+        try {
+            Participation participation = participationService.confirmParticipation(id);
+            if (participation == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Participation not found", "participationId", id));
+            }
+            
+            // Get participant email and name
+            String participantEmail = participationService.getParticipantEmailForParticipation(participation.getParticipantId());
+            if (participantEmail == null || participantEmail.equals("Unknown Participant")) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Participant email not found", "participationId", id));
+            }
+
+            String participantName = participationService.getParticipantNameForParticipation(participation.getParticipantId());
+            String eventName = participationService.getEventTitleForParticipation(participation.getEventId());
+            
+            try {
+                emailService.sendParticipationConfirmationEmail(
+                    participantEmail,
+                    participantName,
+                    eventName
+                );
+            } catch (Exception e) {
+                // Log the specific email error but still return success for the confirmation
+                System.err.println("Email sending failed: " + e.getMessage());
+                e.printStackTrace();
+                
+                return ResponseEntity.ok()
+                    .body(Map.of(
+                        "message", "Participation confirmed but email failed to send",
+                        "participationId", id,
+                        "error", e.getMessage()
+                    ));
+            }
+            
+            return ResponseEntity.ok()
+                .body(Map.of(
+                    "message", "Participation confirmed and email sent successfully",
+                    "participationId", id,
+                    "participantEmail", participantEmail,
+                    "eventName", eventName
+                ));
+                
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                .body(Map.of(
+                    "error", e.getMessage(),
+                    "participationId", id,
+                    "stackTrace", e.getStackTrace()[0].toString()
+                ));
+        }
+    }
+
+    @PostMapping("/test-confirmation-email")
+    public ResponseEntity<?> testConfirmationEmail(@RequestBody Map<String, String> testData) {
+        try {
+            String participantEmail = testData.get("email");
+            String participantName = testData.get("name");
+            String eventName = testData.get("eventName");
+            
+            if (participantEmail == null || participantName == null || eventName == null) {
+                return ResponseEntity.badRequest()
+                    .body("Required fields: email, name, eventName");
+            }
+
+            emailService.sendParticipationConfirmationEmail(
+                participantEmail,
+                participantName,
+                eventName
+            );
+            
+            return ResponseEntity.ok()
+                .body(Map.of(
+                    "message", "Test email sent successfully",
+                    "sentTo", participantEmail
+                ));
+                
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
+}
+>>>>>>> Stashed changes

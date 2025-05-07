@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+import java.util.Map;
+>>>>>>> Stashed changes
 =======
 import java.util.Map;
 >>>>>>> Stashed changes
@@ -132,6 +136,7 @@ public class ParticipationController {
     @PutMapping("/confirm/{id}")
     public ResponseEntity<?> confirmParticipation(@PathVariable String id) {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         Participation participation = participationService.confirmParticipation(id);
         
         // Get participant email and name
@@ -153,6 +158,8 @@ public class ParticipationController {
 
 // Removed StatusUpdateRequest class to place it in its own file
 =======
+=======
+>>>>>>> Stashed changes
         try {
             Participation participation = participationService.confirmParticipation(id);
             if (participation == null) {
@@ -237,5 +244,9 @@ public class ParticipationController {
                 .body(Map.of("error", e.getMessage()));
         }
     }
+<<<<<<< Updated upstream
+}
+>>>>>>> Stashed changes
+=======
 }
 >>>>>>> Stashed changes

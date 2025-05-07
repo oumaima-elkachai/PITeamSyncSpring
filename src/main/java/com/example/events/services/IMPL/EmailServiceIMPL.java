@@ -3,11 +3,14 @@ package com.example.events.services.IMPL;
 import com.example.events.services.interfaces.IEmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 =======
+=======
+>>>>>>> Stashed changes
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,9 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 @Service
 public class EmailServiceIMPL implements IEmailService {
@@ -24,6 +30,7 @@ public class EmailServiceIMPL implements IEmailService {
     
     @Override
     public void sendParticipationConfirmationEmail(String toEmail, String participantName, String eventName) {
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("your-email@gmail.com");
@@ -36,6 +43,8 @@ public class EmailServiceIMPL implements IEmailService {
         
         mailSender.send(message);
 =======
+=======
+>>>>>>> Stashed changes
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -63,6 +72,9 @@ public class EmailServiceIMPL implements IEmailService {
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send email", e);
         }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
 }

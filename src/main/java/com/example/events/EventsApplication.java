@@ -3,6 +3,7 @@ package com.example.events;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 @SpringBootApplication
 public class EventsApplication {
@@ -12,6 +13,8 @@ public class EventsApplication {
 	}
 
 =======
+=======
+>>>>>>> Stashed changes
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -41,5 +44,8 @@ public class EventsApplication {
             throw e;
         }
     }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }

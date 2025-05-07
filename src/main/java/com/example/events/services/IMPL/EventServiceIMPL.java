@@ -184,6 +184,10 @@ public class EventServiceIMPL implements IEventService {
         Participation savedParticipation = participationRepository.save(participation);
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes

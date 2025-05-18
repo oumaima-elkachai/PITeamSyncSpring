@@ -116,7 +116,7 @@ public class EventServiceIMPL implements IEventService {
         return eventRepository.save(existingEvent);
     }
 
-    @Override 
+    @Override
     public Event updateEvent(String id, Event eventDetails, MultipartFile imageFile) throws IOException {
         Event existingEvent = getEventById(id);
         validateEventDates(eventDetails);
@@ -183,14 +183,7 @@ public class EventServiceIMPL implements IEventService {
         // Save participation
         Participation savedParticipation = participationRepository.save(participation);
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
         // Update event's participant list
         if (event.getParticipantId() == null) {
             event.setParticipantId(new ArrayList<>());

@@ -13,20 +13,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
+<<<<<<< HEAD
+
 import java.util.Map;
->>>>>>> Stashed changes
 =======
-import java.util.Map;
->>>>>>> Stashed changes
+>>>>>>> parent of a43303c (final commit)
 
 @RestController
 @RequestMapping("/api/participations")
 @CrossOrigin(origins = "http://localhost:4200")
 public class ParticipationController {
-    
+
     @Autowired
     private IEmailService emailService;  // Update this line
     @Autowired
@@ -116,8 +113,8 @@ public class ParticipationController {
     }
 
     /*@PostMapping("/statistics/{eventId}/update")
-    public ResponseEntity<EventStatistics> updateEventStatistics(@PathVariable String eventId) {        
-        return ResponseEntity.ok(statisticsService.updateEventStatistics(eventId));    
+    public ResponseEntity<EventStatistics> updateEventStatistics(@PathVariable String eventId) {
+        return ResponseEntity.ok(statisticsService.updateEventStatistics(eventId));
     }*/
 
 
@@ -135,27 +132,31 @@ public class ParticipationController {
 
     @PutMapping("/confirm/{id}")
     public ResponseEntity<?> confirmParticipation(@PathVariable String id) {
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+=======
+>>>>>>> parent of a43303c (final commit)
         Participation participation = participationService.confirmParticipation(id);
-        
+
         // Get participant email and name
         String participantEmail = participationService.getParticipantEmailForParticipation(participation.getParticipantId());
         String participantName = participationService.getParticipantNameForParticipation(participation.getParticipantId());
-        
+
         // Get event name
         String eventName = participationService.getEventTitleForParticipation(participation.getEventId());
-        
+
         emailService.sendParticipationConfirmationEmail(
             participantEmail,
             participantName,
             eventName
         );
-        
+
         return ResponseEntity.ok().build();
     }
 }
 
+<<<<<<< HEAD
 // Removed StatusUpdateRequest class to place it in its own file
 =======
 =======
@@ -166,7 +167,7 @@ public class ParticipationController {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Participation not found", "participationId", id));
             }
-            
+
             // Get participant email and name
             String participantEmail = participationService.getParticipantEmailForParticipation(participation.getParticipantId());
             if (participantEmail == null || participantEmail.equals("Unknown Participant")) {
@@ -176,7 +177,7 @@ public class ParticipationController {
 
             String participantName = participationService.getParticipantNameForParticipation(participation.getParticipantId());
             String eventName = participationService.getEventTitleForParticipation(participation.getEventId());
-            
+
             try {
                 emailService.sendParticipationConfirmationEmail(
                     participantEmail,
@@ -187,7 +188,7 @@ public class ParticipationController {
                 // Log the specific email error but still return success for the confirmation
                 System.err.println("Email sending failed: " + e.getMessage());
                 e.printStackTrace();
-                
+
                 return ResponseEntity.ok()
                     .body(Map.of(
                         "message", "Participation confirmed but email failed to send",
@@ -195,7 +196,7 @@ public class ParticipationController {
                         "error", e.getMessage()
                     ));
             }
-            
+
             return ResponseEntity.ok()
                 .body(Map.of(
                     "message", "Participation confirmed and email sent successfully",
@@ -203,7 +204,7 @@ public class ParticipationController {
                     "participantEmail", participantEmail,
                     "eventName", eventName
                 ));
-                
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError()
@@ -221,7 +222,7 @@ public class ParticipationController {
             String participantEmail = testData.get("email");
             String participantName = testData.get("name");
             String eventName = testData.get("eventName");
-            
+
             if (participantEmail == null || participantName == null || eventName == null) {
                 return ResponseEntity.badRequest()
                     .body("Required fields: email, name, eventName");
@@ -232,13 +233,13 @@ public class ParticipationController {
                 participantName,
                 eventName
             );
-            
+
             return ResponseEntity.ok()
                 .body(Map.of(
                     "message", "Test email sent successfully",
                     "sentTo", participantEmail
                 ));
-                
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", e.getMessage()));
@@ -250,3 +251,6 @@ public class ParticipationController {
 =======
 }
 >>>>>>> Stashed changes
+=======
+// Removed StatusUpdateRequest class to place it in its own file
+>>>>>>> parent of a43303c (final commit)

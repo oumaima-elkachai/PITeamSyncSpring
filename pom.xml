@@ -20,7 +20,7 @@
     <properties>
         <java.version>17</java.version>
         <springdoc.version>2.1.0</springdoc.version>
-        <lombok.version>1.18.28</lombok.version>
+        <lombok.version>1.18.32</lombok.version>
         <!-- Add Spring Cloud version -->
         <spring-cloud.version>2022.0.4</spring-cloud.version>
     </properties>
@@ -88,6 +88,7 @@
             <scope>provided</scope>
         </dependency>
 
+
         <!-- Mailing -->
         <dependency>
         <groupId>org.springframework.boot</groupId>
@@ -122,22 +123,21 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-    
+
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>17</source>
+                    <target>17</target>
+                    <compilerArgs>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

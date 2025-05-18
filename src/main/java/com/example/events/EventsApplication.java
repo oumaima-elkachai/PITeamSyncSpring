@@ -2,8 +2,11 @@ package com.example.events;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+=======
+>>>>>>> parent of a43303c (final commit)
 
 @SpringBootApplication
 public class EventsApplication {
@@ -12,6 +15,7 @@ public class EventsApplication {
 		SpringApplication.run(EventsApplication.class, args);
 	}
 
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> Stashed changes
@@ -24,9 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @SpringBootApplication
 public class EventsApplication {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(EventsApplication.class);
-    
+
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -48,4 +52,6 @@ public class EventsApplication {
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> parent of a43303c (final commit)
 }
